@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>✅ Registro Exitoso</title>
+  <style>
+    :root {
+      --success: #28a745;
+      --light: #f8f9fa;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f7ff;
+      margin: 0;
+      padding: 40px;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+    h1 {
+      color: var(--success);
+    }
+    .apiKey-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      font-family: monospace;
+      word-break: break-all;
+      font-size: 16px;
+    }
+    .btn-copy {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .btn-copy:hover {
+      background: #0056b3;
+    }
+    .footer {
+      margin-top: 30px;
+      color: #6c757d;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✅ ¡Listo!</h1>
+    <p>Tu acceso a la API de FacDin ha sido activado.</p>
+    <p><strong>Guarda tu API Key:</strong></p>
+    <div class="apiKey-box" id="apiKeyBox"></div>
+    <button class="btn-copy" onclick="copyKeyAndDownloadPdf()">📋 Copiar y Descargar Comprobante</button>
+    <p style="font-size:14px; margin-top:20px;">
+      Este es el único momento en que se muestra tu API Key.
+    </p>
+    <div class="footer">
+      <p>FacDin - Sistema de Facturación Digital Venezuela</p>
+    </div>
+  </div>
+
+  <script>
+    // Obtener la apiKey desde la URL
+    function getUrlParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    const apiKey = getUrlParameter('key');
+    if (apiKey) {
+      document.getElementById('apiKeyBox').textContent = apiKey;
+    } else {
+      document.getElementById('apiKeyBox').textContent = 'No disponible';
+    }
+
+    // Función: copiar + descargar PDF
+    async function copyKeyAndDownloadPdf() {
+      if (!apiKey) return;
+
+      // 1. Copiar al portapapeles
+      try {
+        await navigator.clipboard.writeText(apiKey);
+        alert('✅ API Key copiada al portapapeles');
+      } catch (err) {
+        alert('⚠️ No se pudo copiar (permiso denegado)');
+      }
+
+      // 2. Descargar el PDF del comprobante
+      try {
+        // Primero obtenemos los datos del cliente
+        const response = await fetch(`/api/clients?apiKey=${encodeURIComponent(apiKey)}`);
+        const client = await response.json();
+
+        if (!client.id) {
+          throw new Error('No se encontró el cliente');
+        }
+
+        // Luego descargamos el PDF
+        const link = document.createElement('a');
+        link.href = `/api/clients/${client.id}/download-pdf`;
+        link.download = `comprobante_facdin_${client.id}.pdf`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+      } catch (error) {
+        console.error('Error al descargar PDF:', error);
+        alert('❌ No se pudo descargar el PDF. Inténtalo más tarde.');
+      }
+    }
+  </script>
+</body>
+</html>

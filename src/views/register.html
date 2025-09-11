@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Regístrate en FacDin</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --gray: #6c757d;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --danger: #dc3545;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      margin: 0;
+      padding: 40px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      text-align: center;
+    }
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 24px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 30px;
+    }
+    p {
+      color: var(--gray);
+      line-height: 1.6;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      margin: 12px 0;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: var(--primary-dark);
+    }
+    .footer {
+      padding: 20px;
+      background: #f8f9fa;
+      color: var(--gray);
+      font-size: 14px;
+      border-top: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Bienvenido a FacDin</h1>
+    </div>
+    <div class="content">
+      <p>Completa tus datos para activar tu acceso a la API.</p>
+      <form id="registroForm">
+        <input type="text" name="name" placeholder="Nombre de la empresa" required />
+        <input type="text" name="rif" placeholder="RIF (J123456789)" required />
+        <button type="submit">Activar Acceso</button>
+      </form>
+    </div>
+    <div class="footer">
+      <p>FacDin - Facturación Digital Segura</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registroForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      // Enviar al endpoint de registro
+      const response = await fetch(window.location.pathname, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        window.location.href = `/api/register/success?key=${encodeURIComponent(result.apiKey)}`;
+      } else {
+        const error = await response.json();
+        alert('Error: ' + (error.error || 'No se pudo registrar'));
+      }
+    };
+  </script>
+</body>
+</html>

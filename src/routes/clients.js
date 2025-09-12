@@ -3,14 +3,16 @@ const express = require('express');
 const router = express.Router();
 const clientController = require('../controllers/clientController');
 
-// POST /api/clients → registro + HTML
+// POST /api/clients → crear cliente
 router.post('/', clientController.createClient);
 
-// GET /api/clients → listar clientes
+// GET /api/clients → listar clientes (opcional)
 router.get('/', clientController.getClients);
-router.get('/', clientController.getClientByApiKey); 
 
-// ✅ ÚNICA ruta para descargar PDF por ID
-router.get('/:id/download-pdf', clientController.downloadPdf); // ← Usa uno solo
+// ✅ Nueva ruta clara para buscar por apiKey
+router.get('/by-api-key', clientController.getClientByApiKey); // ← Ruta única
+
+// ✅ Ruta correcta: /api/clients/:id/download-pdf
+router.get('/:id/download-pdf', clientController.downloadPdf);
 
 module.exports = router;

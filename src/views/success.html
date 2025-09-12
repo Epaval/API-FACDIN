@@ -7,6 +7,8 @@
     :root {
       --success: #28a745;
       --light: #f8f9fa;
+      --primary: #007bff;
+      --gray: #6c757d;
     }
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -57,6 +59,56 @@
       color: #6c757d;
       font-size: 14px;
     }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    .modal h2 {
+      color: var(--success);
+      margin-top: 0;
+    }
+    .modal p {
+      color: #555;
+    }
+    .modal-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    .modal-btn:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
@@ -65,12 +117,22 @@
     <p>Tu acceso a la API de FacDin ha sido activado.</p>
     <p><strong>Guarda tu API Key:</strong></p>
     <div class="apiKey-box" id="apiKeyBox"></div>
-    <button class="btn-copy" onclick="copyKeyAndDownloadPdf()">📋 Copiar y Descargar Comprobante</button>
+    <button class="btn-copy" onclick="copyKeyAndDownloadPdf()">📋 Descargar Comprobante</button>
     <p style="font-size:14px; margin-top:20px;">
       Este es el único momento en que se muestra tu API Key.
     </p>
     <div class="footer">
-      <p>FacDin - Sistema de Facturación Digital Venezuela</p>
+      <p>FacDin - Facturación Digital Inteligente</p>
+    </div>
+  </div>
+
+  <!-- Modal de éxito -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal">
+      <h2>🎉 ¡Descarga exitosa!</h2>
+      <p>Tu comprobante de registro ha sido descargado correctamente.</p>
+      <p>Gracias por afiliarte a FacDin API.</p>
+      <button class="modal-btn" onclick="goToNextPage()">Ir al Panel de Cliente</button>
     </div>
   </div>
 
@@ -90,39 +152,59 @@
 
     // Función: copiar + descargar PDF
     async function copyKeyAndDownloadPdf() {
-      if (!apiKey) return;
+      if (!apiKey) {
+        alert('❌ No se encontró la API Key');
+        return;
+      }
 
       // 1. Copiar al portapapeles
       try {
         await navigator.clipboard.writeText(apiKey);
-        alert('✅ API Key copiada al portapapeles');
+        console.log('✅ API Key copiada al portapapeles');
+        document.getElementById('apiKeyBox').textContent = 'Protegida y copiada';
       } catch (err) {
-        alert('⚠️ No se pudo copiar (permiso denegado)');
+        console.warn('⚠️ No se pudo copiar al portapapeles:', err);
+        alert('API Key copiada: ' + apiKey);
       }
 
-      // 2. Descargar el PDF del comprobante
       try {
-        // Primero obtenemos los datos del cliente
-        const response = await fetch(`/api/clients?apiKey=${encodeURIComponent(apiKey)}`);
-        const client = await response.json();
+        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const response = await fetch(`${baseUrl}/api/clients/by-api-key?apiKey=${encodeURIComponent(apiKey)}`);
 
-        if (!client.id) {
-          throw new Error('No se encontró el cliente');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         }
 
-        // Luego descargamos el PDF
+        const client = await response.json();
+
+        if (!client || !client.id) {
+          throw new Error('Cliente no encontrado en la respuesta');
+        }
+
+        // Descargar el PDF
         const link = document.createElement('a');
-        link.href = `/api/clients/${client.id}/download-pdf`;
+        link.href = `${baseUrl}/api/clients/${client.id}/download-pdf`;
         link.download = `comprobante_facdin_${client.id}.pdf`;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
+        console.log('✅ PDF descargado exitosamente');
+
+        // Mostrar modal de éxito
+        document.getElementById('successModal').classList.add('active');
+
       } catch (error) {
-        console.error('Error al descargar PDF:', error);
-        alert('❌ No se pudo descargar el PDF. Inténtalo más tarde.');
+        console.error('❌ Error al descargar PDF:', error);
+        alert(`❌ No se pudo descargar el PDF:\n${error.message}\nInténtalo más tarde.`);
       }
+    }
+
+    // Redirigir al panel del cliente (futuro)
+    function goToNextPage() {
+      // Aquí puedes cambiar a la página real cuando esté lista
+      window.location.href = 'https://julioperez.pythonanywhere.com/'; 
     }
   </script>
 </body>

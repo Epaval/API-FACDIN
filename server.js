@@ -2,6 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const session = require('express-session');
 
 const { sequelize } = require("./src/config/database");
 const apiRoutes = require("./src/routes");
@@ -12,6 +13,13 @@ app.use((req, res, next) => {
   console.log('🔧 [INIT] Solicitud entrante:', req.method, req.url);
   next();
 })
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'tu-secreto-muy-seguro',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 horas
+}));
 
 
 const PORT = process.env.PORT || 3001;
@@ -52,6 +60,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+//===RUTA PARA FACTURAS========
+app.use('/api/facturas', require('./src/routes/facturas'));
+
+
+//======= RUTAS ADMIN ==============
+app.use('/api/admin', require('./src/routes/admin'));
+
+//========== RUTAS CAJAS=========
+app.use('/api/caja', require('./src/routes/caja'));
+
 // ✅ Manejo de errores global
 app.use((err, req, res, next) => {
   console.error("❌ [ERROR] ", err.stack);
@@ -85,6 +103,10 @@ const startServer = async () => {
     //   await db.Client.sync();
     //   await db.Invoice.sync();
     // }
+
+    
+    
+
 
     console.log('🔧 Servidor listo para escuchar');
 

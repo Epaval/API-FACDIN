@@ -3,12 +3,14 @@ const { Client } = require('../models');
 const crypto = require('crypto');
 const { validateRif } = require('../utils/validateRif');
 const { generarPdfBienvenida } = require('../services/pdfService');
+const bcrypt = require('bcrypt');
 
 const generateApiKey = () => {
   const prefix = process.env.API_KEY_PREFIX || 'fcd_';
-  const randomPart = crypto.randomBytes(24).toString('hex');
-  return `${prefix}${randomPart}`;
+  return `${prefix}${crypto.randomBytes(24).toString('hex')}`;
 };
+
+const saltRounds = 10;
 
 // Genera el comprobante HTML
 const generarComprobanteHtml = (client) => {
@@ -44,7 +46,7 @@ const generarComprobanteHtml = (client) => {
       <p><strong>API Key:</strong> <code>${client.apiKey}</code></p>
       <p><strong>Fecha y Hora:</strong> ${fecha}</p>
     </div>
-    <a href="/api/clients/download-pdf/${client.id}" class="btn">
+    <a href="/api/clients/${client.id}/download-pdf" class="btn">
       📥 Descargar Comprobante en PDF
     </a>
     <div class="footer">
@@ -56,14 +58,28 @@ const generarComprobanteHtml = (client) => {
 </html>`;
 };
 
-// ✅ Exporta createClient (el nombre usado en la ruta)
+// ✅ Crear cliente directamente (por ejemplo, desde admin)
 exports.createClient = async (req, res) => {
-  const { name, rif } = req.body;
+  const { name, rif, password, repetirPassword } = req.body;
 
-  if (!name || !rif) {
+  if (!name || !rif || !password || !repetirPassword) {
     return res.status(400).send(`
       <h1>❌ Error</h1>
-      <p>Los campos "name" y "rif" son obligatorios.</p>
+      <p>Los campos "name", "rif", "password" y "repetirPassword" son obligatorios.</p>
+    `);
+  }
+
+  if (password !== repetirPassword) {
+    return res.status(400).send(`
+      <h1>❌ Contraseñas no coinciden</h1>
+      <p>Las contraseñas deben ser iguales.</p>
+    `);
+  }
+
+  if (password.length < 6) {
+    return res.status(400).send(`
+      <h1>❌ Contraseña débil</h1>
+      <p>La contraseña debe tener al menos 6 caracteres.</p>
     `);
   }
 
@@ -91,14 +107,16 @@ exports.createClient = async (req, res) => {
       if (!existing) isUnique = true;
     }
 
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
     const client = await Client.create({
       name,
       rif,
       apiKey,
+      passwordHash,
       active: true
     });
 
-    // ✅ Enviar página HTML con botón de descarga
     res.send(generarComprobanteHtml(client.toJSON()));
 
   } catch (error) {
@@ -141,9 +159,9 @@ exports.downloadPdf = async (req, res) => {
   }
 };
 
+// ✅ Buscar cliente por apiKey
 exports.getClientByApiKey = async (req, res) => {
   const { apiKey } = req.query;
-  console.log('🔍 API Key recibida:', apiKey);
 
   if (!apiKey) {
     return res.status(400).json({ error: 'apiKey es requerido' });

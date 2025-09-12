@@ -1,4 +1,3 @@
-// test-generate-link.js
 require('dotenv').config();
 const { sequelize } = require('./src/config/database');
 const db = require('./src/models');
@@ -15,13 +14,13 @@ async function probarFlujo() {
     const link = await RegistrationLink.create({
       token,
       createdBy: 'admin@facdin.com',
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000) // 30 minutos
+      expiresAt: new Date(Date.now() + 3 * 60 * 1000) // 3 minutos
     });
 
     const url = `http://localhost:3001/api/register/${link.token}`;
     console.log('\n🔗 Link de registro generado:');
     console.log(url);
-    console.log('⏳ Válido por 30 minutos');
+    console.log('⏳ Válido por 180 segundos');
     console.log('💡 Ábrelo en el navegador para probar el flujo\n');
 
   } catch (error) {

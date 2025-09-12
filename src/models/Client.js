@@ -1,4 +1,3 @@
-// src/models/Client.js
 const { validateRif } = require('../utils/validateRif');
 
 module.exports = (sequelize, DataTypes) => {
@@ -12,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    rif: {
+     rif: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
@@ -29,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
+    passwordHash: { // 
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
     active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
@@ -40,3 +43,23 @@ module.exports = (sequelize, DataTypes) => {
 
   return Client;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

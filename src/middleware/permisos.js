@@ -1,9 +1,9 @@
 // src/middleware/permisos.js
 
 const PERMISOS = {
-  cajero: ['abrir_caja', 'cerrar_caja', 'insertar_factura'],
-  supervisor: ['abrir_caja', 'cerrar_caja', 'insertar_factura', 'insertar_nota'],
-  admin: ['abrir_caja', 'cerrar_caja', 'insertar_factura', 'insertar_nota', 'consultar_tablas']
+  asesor: ['abrir_caja', 'cerrar_caja', 'insertar_factura'],
+  gae: ['abrir_caja', 'cerrar_caja', 'insertar_factura', 'insertar_nota'],
+  ga: ['abrir_caja', 'cerrar_caja', 'insertar_factura', 'insertar_nota', 'consultar_tablas']
 };
 
 exports.tienePermiso = (accion) => {

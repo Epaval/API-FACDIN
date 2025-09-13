@@ -12,18 +12,19 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 exports.registrarUsuario = async (req, res) => {
   const apiKey = req.headers['x-api-key'];
-  const { nombre, email, rol, password } = req.body;
+  const { nombre, ficha, ci, rol, password, email } = req.body;
 
-  if (!nombre || !email || !rol || !password) {
+  // Campos obligatorios
+  if (!nombre || !ficha || !ci || !rol || !password) {
     return res.status(400).json({ 
-      error: 'Nombre, email, rol y contraseña son obligatorios' 
+      error: 'Nombre, ficha, CI, rol y contraseña son obligatorios' 
     });
   }
 
-  const ROLES = ['cajero', 'supervisor', 'admin'];
+  const ROLES = ['asesor', 'ga', 'gae'];
   if (!ROLES.includes(rol)) {
     return res.status(400).json({ 
-      error: 'Rol no válido. Usa: cajero, supervisor, admin' 
+      error: 'Rol no válido. Usa: asesor, ga, gae' 
     });
   }
 
@@ -35,71 +36,86 @@ exports.registrarUsuario = async (req, res) => {
 
     const schema = `cliente_${client.id}`;
 
-    const result = await sequelize.query(
-      `SELECT id FROM "${schema}"."usuarios_autorizados" WHERE email = :email`,
+    // Verificar si ya existen ficha o CI
+    const resultCheck = await sequelize.query(
+      `SELECT id, ficha, ci FROM "${schema}"."usuarios_autorizados" WHERE ficha = :ficha OR ci = :ci`,
       {
         type: sequelize.QueryTypes.SELECT,
-        replacements: { email }
+        replacements: { ficha, ci }
       }
     );
 
-    if (Array.isArray(result) && result.length > 0) {
-      return res.status(409).json({
-        error: `Ya existe un usuario con el correo ${email}`
-      });
+    if (Array.isArray(resultCheck) && resultCheck.length > 0) {
+      const conflict = resultCheck[0];
+      if (conflict.ficha === ficha) {
+        return res.status(409).json({ error: `Ya existe un usuario con la ficha ${ficha}` });
+      }
+      if (conflict.ci === ci) {
+        return res.status(409).json({ error: `Ya existe un usuario con la CI ${ci}` });
+      }
     }
 
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const insertResult = await sequelize.query(
+    // Insertar nuevo usuario
+    const [insertedUser] = await sequelize.query(
       `INSERT INTO "${schema}"."usuarios_autorizados"
-       (nombre, email, rol, password_hash)
-       VALUES (:nombre, :email, :rol, :passwordHash)
-       RETURNING id, nombre, email, rol`,
+       (nombre, ficha, ci, rol, password_hash, email)
+       VALUES (:nombre, :ficha, :ci, :rol, :passwordHash, :email)
+       RETURNING id, nombre, ficha, ci, rol, email`,
       {
-        type: sequelize.QueryTypes.INSERT,
-        replacements: { nombre, email, rol, passwordHash }
+        type: sequelize.QueryTypes.RAW,
+        replacements: { nombre, ficha, ci, rol, passwordHash, email: email || null },
+        plain: true
       }
     );
 
-    const usuario = Array.isArray(insertResult) && insertResult.length > 0 ? insertResult[0] : null;
-
-    if (!usuario) {
-      throw new Error('No se pudo crear el usuario');
+    if (!insertedUser || !insertedUser.id) {
+      throw new Error('No se generó ID del usuario');
     }
 
     const userAgent = req.get('User-Agent') || req.headers['user-agent'] || 'desconocido';
 
+    // Registrar evento
     await sequelize.query(
       `INSERT INTO "${schema}"."registro_eventos"
        (accion, entidad, entidad_id, detalle, usuario, ip, user_agent)
-       VALUES (:accion, :entidad, :entidad_id, :detalle, :usuario, :ip, :user_agent)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       {
-        replacements: {
-          accion: 'crear_usuario',
-          entidad: 'usuario',
-          entidad_id: usuario.id,
-          detalle: `Usuario ${email} creado como ${rol}`,
-          usuario: email,
-          ip: req.ip || '127.0.0.1',
-          user_agent: userAgent.substring(0, 255)
-        }
+        replacements: [
+          'crear_usuario',
+          'usuario',
+          insertedUser.id,
+          `Usuario ${ficha} (CI: ${ci}) creado como ${rol}`,
+          ficha,
+          req.ip || '127.0.0.1',
+          userAgent.substring(0, 255)
+        ]
       }
     );
 
     res.json({
       message: '✅ Usuario registrado exitosamente',
-      usuario
+      usuario: {
+        id: insertedUser.id,
+        nombre: insertedUser.nombre,
+        ficha: insertedUser.ficha,
+        ci: insertedUser.ci,
+        rol: insertedUser.rol,
+        email: insertedUser.email
+      }
     });
 
   } catch (error) {
     console.error('Error al registrar usuario:', error);
+
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({
-        error: `Ya existe un usuario con el correo ${email}`
+        error: `Ya existe un usuario con esta ficha o CI`
       });
     }
+
     res.status(500).json({ 
       error: 'No se pudo registrar el usuario. Intente más tarde.' 
     });
@@ -110,12 +126,12 @@ exports.registrarUsuario = async (req, res) => {
  * Inicia sesión un usuario autorizado del cliente
  */
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { ficha, password } = req.body; // ← Ahora es ficha, no email
   const apiKey = req.headers['x-api-key'];
 
-  if (!email || !password || !apiKey) {
+  if (!ficha || !password || !apiKey) {
     return res.status(400).json({ 
-      error: 'Email, contraseña y API Key son obligatorios' 
+      error: 'Ficha, contraseña y API Key son obligatorios' 
     });
   }
 
@@ -128,12 +144,12 @@ exports.login = async (req, res) => {
     const schema = `cliente_${client.id}`;
 
     const result = await sequelize.query(
-      `SELECT id, nombre, email, rol, activo, password_hash 
+      `SELECT id, nombre, ficha, ci, rol, activo, password_hash, email
        FROM "${schema}"."usuarios_autorizados" 
-       WHERE email = :email`,
+       WHERE ficha = :ficha`,
       {
         type: sequelize.QueryTypes.SELECT,
-        replacements: { email }
+        replacements: { ficha }
       }
     );
 
@@ -148,7 +164,7 @@ exports.login = async (req, res) => {
     }
 
     if (!user.password_hash || typeof user.password_hash !== 'string' || user.password_hash.length !== 60) {
-      console.error('❌ Hash inválido o dañado para:', email);
+      console.error('❌ Hash inválido o dañado para:', ficha);
       return res.status(500).json({ error: 'Error interno del servidor' });
     }
 
@@ -157,16 +173,26 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    // ✅ Generar JWT con ficha y CI
     const token = jwt.sign(
-      { id: user.id, email: user.email, rol: user.rol, clientId: client.id },
+      { 
+        id: user.id, 
+        ficha: user.ficha, 
+        ci: user.ci, 
+        rol: user.rol, 
+        clientId: client.id 
+      },
       JWT_SECRET,
       { expiresIn: '8h' }
     );
 
+    // Guardar en Redis
     await redis.set(`session:${user.id}`, JSON.stringify({
       token,
       rol: user.rol,
       clientId: client.id,
+      ficha: user.ficha,
+      ci: user.ci,
       loggedInAt: new Date().toISOString(),
       ip: req.ip
     }), { EX: 8 * 60 * 60 });
@@ -174,7 +200,13 @@ exports.login = async (req, res) => {
     res.json({
       message: '✅ Autenticado correctamente',
       token,
-      usuario: { nombre: user.nombre, rol: user.rol, email: user.email }
+      usuario: { 
+        nombre: user.nombre, 
+        rol: user.rol, 
+        ficha: user.ficha, 
+        ci: user.ci,
+        email: user.email 
+      }
     });
 
   } catch (error) {

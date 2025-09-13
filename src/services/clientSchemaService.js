@@ -79,7 +79,7 @@ class ClientSchemaService {
       "impresoraFiscal" VARCHAR(50)
     );`);
 
-    //Índices separados (PostgreSQL no permite INDEX dentro de CREATE TABLE)
+    // Índices
     await q(`CREATE INDEX IF NOT EXISTS idx_facturas_numero_${clienteId} 
              ON "${schemaName}"."facturas" ("numero_factura");`);
     await q(`CREATE INDEX IF NOT EXISTS idx_facturas_fecha_${clienteId} 
@@ -123,11 +123,13 @@ class ClientSchemaService {
     await q(`CREATE INDEX IF NOT EXISTS idx_ncd_tipo_${clienteId} 
              ON "${schemaName}"."notas_credito_debito" ("tipo");`);
 
-    // --- 5. Usuarios autorizados ---
+    // --- 5. Usuarios autorizados (con ficha y CI) ---
     await q(`CREATE TABLE IF NOT EXISTS "${schemaName}"."usuarios_autorizados" (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(100) NOT NULL,
-      email VARCHAR(100) UNIQUE NOT NULL,
+      ficha VARCHAR(10) UNIQUE NOT NULL,
+      ci INTEGER UNIQUE NOT NULL,
+      email VARCHAR(100),
       rol VARCHAR(50) DEFAULT 'usuario',
       activo BOOLEAN DEFAULT TRUE,
       password_hash TEXT NOT NULL,
@@ -135,8 +137,12 @@ class ClientSchemaService {
       ultimo_acceso TIMESTAMP
     );`);
 
+    await q(`CREATE INDEX IF NOT EXISTS idx_usuario_ficha_${clienteId} 
+             ON "${schemaName}"."usuarios_autorizados" ("ficha");`);
+    await q(`CREATE INDEX IF NOT EXISTS idx_usuario_ci_${clienteId} 
+             ON "${schemaName}"."usuarios_autorizados" ("ci");`);
     await q(`CREATE INDEX IF NOT EXISTS idx_usuario_email_${clienteId} 
-    ON "${schemaName}"."usuarios_autorizados" ("email");`);
+             ON "${schemaName}"."usuarios_autorizados" ("email");`);
 
     // --- 6. Registro de eventos ---
     await q(`CREATE TABLE IF NOT EXISTS "${schemaName}"."registro_eventos" (

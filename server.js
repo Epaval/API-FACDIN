@@ -62,6 +62,7 @@ app.get("/api/health", (req, res) => {
 
 //===RUTA PARA FACTURAS========
 app.use('/api/facturas', require('./src/routes/facturas'));
+app.use('/api/notas', require('./src/routes/nota'));
 
 
 //======= RUTAS ADMIN ==============

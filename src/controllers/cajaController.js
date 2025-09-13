@@ -45,7 +45,7 @@ exports.abrirCaja = async (req, res) => {
       fechaApertura: new Date().toISOString()
     }), { EX: 8 * 60 * 60 }); // 8 horas
 
-    // ✅ Obtener user_agent de forma segura
+    //  Obtener user_agent de forma segura
     const userAgent = req.get('User-Agent') || req.headers['user-agent'] || 'desconocido';
 
     // Registrar evento - ahora con 6 valores correctos

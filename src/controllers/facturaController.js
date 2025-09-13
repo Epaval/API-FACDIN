@@ -1,6 +1,7 @@
 // src/controllers/facturaController.js
 const { Client } = require('../models');
 const { sequelize } = require('../config/database');
+const redis = require('../config/redis'); // ✅ Importar redis
 
 /**
  * Endpoint público: Insertar una factura real
@@ -50,23 +51,22 @@ exports.insertarFactura = async (req, res) => {
       return res.status(403).json({ error: 'API Key inválida o no autorizada.' });
     }
 
-    if (!client.id) {
-      await t.rollback();
-      return res.status(500).json({ error: 'Cliente sin ID' });
-    }
-
     const schema = `cliente_${client.id}`;
 
-    const caja = req.session?.caja;
-    if (!caja || caja.clientId !== client.id) {
+    // 🔑 Obtener datos de la caja desde Redis (no session)
+    const cajaDataStr = await redis.get(`caja:${client.id}`);
+    const cajaData = cajaDataStr ? JSON.parse(cajaDataStr) : null;
+
+    if (!cajaData) {
+      await t.rollback();
       return res.status(400).json({
-        error: 'Debe abrir la caja antes de emitir facturas'
+        error: 'Debe abrir la caja antes de emitir facturas.'
       });
     }
 
-    const { cajaId, impresoraFiscal } = caja;
+    const { cajaId, impresoraFiscal } = cajaData;
 
-    // Verificar que el esquema existe (opcional, pero recomendado)
+    // Verificar que el esquema existe
     const [schemas] = await sequelize.query(
       `SELECT schema_name FROM information_schema.schemata WHERE schema_name = '${schema}'`
     );
@@ -76,7 +76,7 @@ exports.insertarFactura = async (req, res) => {
       return res.status(500).json({ error: 'El esquema del cliente no existe.' });
     }
 
-    // 🔒 Obtener y actualizar contador con bloqueo pesimista
+    // 🔒 Obtener y actualizar contador
     const [contador] = await sequelize.query(
       `SELECT * FROM "${schema}"."contador" FOR UPDATE`,
       { transaction: t }
@@ -102,8 +102,8 @@ exports.insertarFactura = async (req, res) => {
     const [factura] = await sequelize.query(
       `INSERT INTO "${schema}"."facturas" 
        (numero_factura, rif_emisor, razon_social_emisor, rif_receptor, razon_social_receptor, 
-        fecha_emision, subtotal, iva, total, estado) 
-       VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?, 'registrada') 
+        fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal") 
+       VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?, 'registrada', ?, ?) 
        RETURNING id`,
       {
         replacements: [
@@ -148,10 +148,13 @@ exports.insertarFactura = async (req, res) => {
     await sequelize.query(
       `INSERT INTO "${schema}"."registro_eventos" 
        (accion, entidad, entidad_id, detalle, usuario, ip, user_agent) 
-       VALUES ('crear_factura', 'factura', ?, 'Factura registrada vía API', ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
+          'crear_factura',
+          'factura',
           facturaId,
+          `Factura registrada vía API`,
           req.headers['user-agent']?.substring(0, 100) || 'desconocido',
           req.ip || '127.0.0.1',
           req.get('User-Agent')?.substring(0, 200) || ''

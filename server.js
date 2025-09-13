@@ -25,7 +25,7 @@ app.use(session({
 const PORT = process.env.PORT || 3001;
 
 // 🔥 Middlewares esenciales - VAN PRIMERO
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: '10mb', type: 'application/json' }));
 
 app.use((req, res, next) => {
   console.log('📥 [BODY] Content-Type:', req.headers['content-type']);
@@ -69,6 +69,11 @@ app.use('/api/admin', require('./src/routes/admin'));
 
 //========== RUTAS CAJAS=========
 app.use('/api/caja', require('./src/routes/caja'));
+
+
+//=========RUTAS EMPLEADOS===========
+app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/usuarios', require('./src/routes/usuario'));
 
 // ✅ Manejo de errores global
 app.use((err, req, res, next) => {

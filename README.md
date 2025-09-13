@@ -33,3 +33,17 @@ Inversión estimada: La inversión dependerá del tipo de sistema actual, volume
 Activación rápida y guiada
 Soporte técnico y comercial personalizado
 API diseñada para escalar con tu negocio
+
+
+sequenceDiagram
+    Empleado->>Frontend: Inicia sesión (correo @facdin.com)
+    Frontend->>API: POST /auth/login → JWT
+    Empleado->>Frontend: Abre caja (número + impresora)
+    Frontend->>API: POST /api/caja/abrir (con JWT + apiKey)
+    Caja->>Backend: Guarda estado en Redis o DB
+    loop Venta
+        Cajero->>Frontend: Ingresa RIF y productos
+        Frontend->>API: POST /api/facturas/insertar (con JWT + apiKey)
+        API->>Base de datos: Crea factura en esquema cliente_X
+        API-->>Frontend: Devuelve N° factura
+    end

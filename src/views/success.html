@@ -203,9 +203,18 @@
 
     // Redirigir al panel del cliente (futuro)
     function goToNextPage() {
-      // Aquí puedes cambiar a la página real cuando esté lista
-      window.location.href = 'https://julioperez.pythonanywhere.com/'; 
-    }
+  const apiKey = getUrlParameter('key');
+  if (!apiKey) {
+    alert('❌ No se encontró la API Key');
+    return;
+  }
+
+  // Construye la URL con la apiKey
+  const registroUrl = `http://127.0.0.1:5500/facdin-frontend/public/index.html?apiKey=${encodeURIComponent(apiKey)}`;
+  
+  // Abre en nueva pestaña o redirige
+  window.location.href = registroUrl;
+}
   </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
-// src/models/index.js
 const fs = require('fs');
 const path = require('path');
 const { sequelize } = require('../config/database');
 
+const basename = path.basename(__filename);
 const db = {};
 
 // Cargar todos los modelos automáticamente
@@ -10,18 +10,18 @@ fs.readdirSync(__dirname)
   .filter((file) => {
     return (
       file !== 'index.js' &&
-      file !== 'ContadorFacturacion.js' && // ⚠️ Eliminado: ya no se usa tabla global
+      file !== 'ContadorFacturacion.js' && 
+      file !== basename &&
       file.endsWith('.js')
     );
   })
   .forEach((file) => {
     const model = require(path.join(__dirname, file))(sequelize, require('sequelize').DataTypes);
-    db[model.name] = model;
+    const modelName = model.name || file.split('.')[0]; // Asegura el nombre
+    db[modelName] = model;
   });
 
 // === Relaciones ===
-
-// Cliente tiene muchas facturas (si usas el modelo Invoice)
 if (db.Client && db.Invoice) {
   db.Client.hasMany(db.Invoice, {
     foreignKey: 'clientId',
@@ -33,8 +33,6 @@ if (db.Client && db.Invoice) {
   });
 }
 
-
-// Guardar instancias
 db.sequelize = sequelize;
 db.Sequelize = require('sequelize');
 

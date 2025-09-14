@@ -71,6 +71,9 @@ app.use('/api/admin', require('./src/routes/admin'));
 //========== RUTAS CAJAS=========
 app.use('/api/caja', require('./src/routes/caja'));
 
+//=========== TOKEN ================
+app.use('/', require('./src/routes/redirect'));
+
 
 //=========RUTAS EMPLEADOS===========
 app.use('/api/auth', require('./src/routes/auth'));

@@ -3,8 +3,8 @@ module.exports = (sequelize, DataTypes) => {
   const Empleado = sequelize.define('Empleado', {
     id: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
+      primaryKey: true
     },
     email: {
       type: DataTypes.STRING,
@@ -23,17 +23,24 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    activo: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
+    passwordHash: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: 'password_hash'
     },
     rol: {
       type: DataTypes.ENUM('admin', 'agente'),
-      defaultValue: 'agente'
+      defaultValue: 'agente',
+      allowNull: false
+    },
+    activo: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
     }
   }, {
     tableName: 'empleados',
-    timestamps: true
+    timestamps: true,
+    underscored: true // Usa snake_case en DB
   });
 
   return Empleado;

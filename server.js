@@ -60,6 +60,11 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// ========================
+// ✅ RUTAS PÚBLICAS ESTÁTICAS
+// ========================
+app.use(express.static('public'));
+
 //===RUTA PARA FACTURAS========
 app.use('/api/facturas', require('./src/routes/facturas'));
 app.use('/api/notas', require('./src/routes/nota'));
@@ -78,6 +83,8 @@ app.use('/', require('./src/routes/redirect'));
 //=========RUTAS EMPLEADOS===========
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/usuarios', require('./src/routes/usuario'));
+
+
 
 // ✅ Manejo de errores global
 app.use((err, req, res, next) => {

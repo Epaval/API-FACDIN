@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔐 Panel FACDIN-API</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #007bff;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+    }
+
+    .user-info {
+      text-align: right;
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #0056b3;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    tr:hover {
+      background-color: #f1f3f5;
+    }
+
+    .status-used {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .status-unused {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .no-data {
+      text-align: center;
+      color: #6c757d;
+      padding: 20px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+  </style>
+
+  <!-- ✅ Validación temprana del token -->
+  <script>
+    const token = localStorage.getItem('facdin_token');
+    
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    function isTokenExpired(token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp * 1000 < Date.now();
+      } catch (e) {
+        return true;
+      }
+    }
+
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('facdin_token');
+      alert('Tu sesión ha expirado.');
+      window.location.href = '/login.html';
+    }
+
+    // Decodificar JWT para obtener datos del empleado
+    function getEmpleadoFromToken() {
+      try {
+        const payload = atob(token.split('.')[1]);
+        return JSON.parse(payload);
+      } catch (e) {
+        return null;
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Encabezado con info del usuario y logout -->
+    <header>
+      <h1>🔐 Panel Administrativo FACDIN-API</h1>
+      <div class="user-info">
+        <p><strong>Usuario:</strong> <span id="empleadoNombre">Cargando...</span></p>
+        <p><strong>Rol:</strong> <span id="empleadoRol">-</span></p>
+        <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
+      </div>
+    </header>
+
+    <!-- Botón para generar enlace -->
+    <div class="card">
+      <h2>➕ Generar Enlace de Registro</h2>
+      <button class="btn" onclick="generarEnlace()">Generar Nuevo Enlace</button>
+      <div id="result"></div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="card">
+      <h2>👥 Clientes Registrados</h2>
+      <table id="clientesTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Rif.</th>
+            <th>Fecha de Registro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="no-data">Cargando clientes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Historial de Enlaces Generados -->
+    <div class="card">
+      <h2>🔗 Historial de Enlaces Generados</h2>
+      <table id="enlacesTable">
+        <thead>
+          <tr>
+            <th>Enlace Acortado</th>
+            <th>Creado Por</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="no-data">Cargando enlaces...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Enlaces no asignados -->
+    <div class="card">
+      <h2>🕒 Enlaces Sin Asignar a Cliente</h2>
+      <p>Enlaces generados pero aún no usados para registrar un nuevo cliente.</p>
+      <table id="sinClienteTable">
+        <thead>
+          <tr>
+            <th>Enlace</th>
+            <th>Fecha de Creación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="2" class="no-data">Verificando enlaces huérfanos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      &copy; 2025 FACDIN-API. Todos los derechos reservados.
+    </footer>
+
+  </div>
+
+  <script>
+   
+    const empleado = getEmpleadoFromToken();
+
+    // Mostrar info del empleado
+    document.getElementById('empleadoNombre').textContent = empleado?.email || 'Desconocido';
+    document.getElementById('empleadoRol').textContent = empleado?.rol || 'N/A';
+
+    // Cargar datos al iniciar
+    window.onload = () => {
+      cargarClientes();
+      cargarEnlaces();
+      verificarSinCliente();
+    };
+
+    // Botón de logout
+    function logout() {
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).finally(() => {
+        localStorage.removeItem('facdin_token');
+        window.location.href = '/login.html';
+      });
+    }
+
+    // Generar nuevo enlace
+    async function generarEnlace() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<p>Generando...</p>';
+
+      const res = await fetch('/api/admin/generar-enlace', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        resultDiv.innerHTML = `
+          <p><strong>✅ Enlace generado:</strong></p>
+          <a href="${data.link}" target="_blank">${data.link}</a>
+          <p><small>Expira en 3 minutos.</small></p>
+        `;
+        setTimeout(() => {
+          cargarEnlaces(); // Actualizar lista
+        }, 1000);
+      } else {
+        resultDiv.innerHTML = `<span style="color:red">❌ Error: ${data.error}</span>`;
+      }
+    }
+
+    // Cargar clientes
+    async function cargarClientes() {
+      const tbody = document.querySelector('#clientesTable tbody');
+      tbody.innerHTML = '<tr><td colspan="4" class="no-data">Cargando...</td></tr>';
+
+      try {
+        const res = await fetch('/api/clients', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('No autorizado');
+
+        const clientes = await res.json();
+
+        if (clientes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay clientes registrados</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = clientes.map(c => `
+          <tr>
+            <td>${c.id}</td>
+            <td>${c.name}</td>
+            <td>${c.rif}</td>
+            <td>${new Date(c.fechaCreacion).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="4" class="no-data">Error al cargar clientes</td></tr>';
+      }
+    }
+
+    // Cargar enlaces generados
+async function cargarEnlaces() {
+  const tbody = document.querySelector('#enlacesTable tbody');
+  tbody.innerHTML = '<tr><td colspan="4" class="no-data">Cargando...</td></tr>';
+
+  try {
+    const res = await fetch('/api/admin/enlaces-generados', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error('No autorizado');
+
+    const enlaces = await res.json();
+
+    if (enlaces.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="no-data">No se han generado enlaces</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = enlaces.map(e => `
+      <tr>
+       <td>${e.cliente || 'Pendiente'}</td>
+        <td>${e.creadoPor || 'Desconocido'}</td>
+        <td>${new Date(e.fecha).toLocaleString()}</td>
+        <td class="${e.usado ? 'status-used' : 'status-unused'}">
+          ${e.usado ? 'Usado' : 'Pendiente'}
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Error cargando enlaces:', err);
+    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Error al cargar enlaces</td></tr>';
+  }
+}
+
+    // Verificar enlaces no usados (sin cliente asociado)
+    async function verificarSinCliente() {
+      const tbody = document.querySelector('#sinClienteTable tbody');
+      tbody.innerHTML = '<tr><td colspan="2" class="no-data">Verificando...</td></tr>';
+
+      try {
+        const [clientesRes, enlacesRes] = await Promise.all([
+          fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+          fetch('/api/admin/registration_links', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+        ]);
+
+        const clientesConRegistro = new Set(clientesRes.map(c => c.apiKey)); // Asumiendo que apiKey es el vínculo
+        const enlacesSinCliente = enlacesRes.filter(e => !e.used);
+
+        if (enlacesSinCliente.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="2" class="no-data">Todos los enlaces han sido usados</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = enlacesSinCliente.map(e => `
+          <tr>
+            <td><a href="${e.enlace}" target="_blank">${e.enlace}</a></td>
+            <td>${new Date(e.fecha).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="2" class="no-data">Error al verificar enlaces</td></tr>';
+      }
+    }
+  </script>
+</body>
+</html>
+

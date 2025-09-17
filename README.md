@@ -47,3 +47,22 @@ sequenceDiagram
         API->>Base de datos: Crea factura en esquema cliente_X
         API-->>Frontend: Devuelve N° factura
     end
+
+❤️ Versión emocional (para clientes, emprendedores o usuarios finales)
+FACDIN-API: tu aliado digital para una gestión segura y profesional
+
+Confía en una solución que protege tu negocio y te brinda tranquilidad en cada interacción:
+
+✅ Inicio de sesión seguro: Tus datos y los de tus clientes siempre protegidos con tecnología JWT.
+
+✅ Panel profesional: Visualiza tu información de forma clara, ordenada y dinámica.
+
+✅ Enlaces de registro únicos: Invita a tus usuarios con accesos temporales y personalizados.
+
+✅ Acceso protegido: Nadie entra sin autorización. Tu sistema siempre bajo control.
+
+✅ Roles y permisos bien definidos: Cada usuario con su nivel de acceso, sin complicaciones.
+
+✅ Interfaz amigable: Navega sin interrupciones ni alertas molestas. Todo fluye.
+
+FACDIN-API no solo es tecnología: es confianza, control y profesionalismo para tu marca.

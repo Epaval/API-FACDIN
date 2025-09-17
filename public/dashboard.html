@@ -4,6 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🔐 Panel FACDIN-API</title>
+
+  <!-- ⚠️ Protección temprana: bloquear acceso antes de cargar cualquier contenido -->
+  <script>
+    // === Validación de autenticación ===
+    const token = localStorage.getItem('facdin_token');
+
+    if (!token) {
+      // No hay token → fuera
+      window.location.replace('/login.html');
+      throw new Error('No autorizado');
+    }
+
+    function isTokenExpired(token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp * 1000 < Date.now();
+      } catch (e) {
+        return true;
+      }
+    }
+
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('facdin_token');
+      window.location.replace('/login.html');
+      throw new Error('Token expirado');
+    }
+
+    // Decodificar JWT para uso en frontend
+    function getEmpleadoFromToken() {
+      try {
+        const payload = atob(token.split('.')[1]);
+        return JSON.parse(payload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Hacer disponible globalmente
+    const empleado = getEmpleadoFromToken();
+    if (!empleado || !empleado.email?.endsWith('@facdin.com')) {
+      localStorage.removeItem('facdin_token');
+      window.location.replace('/login.html');
+      throw new Error('Acceso no autorizado');
+    }
+  </script>
+
+  <!-- Solo carga estilos si pasa la validación -->
   <style>
     * {
       box-sizing: border-box;
@@ -121,40 +168,6 @@
       font-size: 0.9rem;
     }
   </style>
-
-  <!-- ✅ Validación temprana del token -->
-  <script>
-    const token = localStorage.getItem('facdin_token');
-    
-    if (!token) {
-      window.location.href = '/login.html';
-    }
-
-    function isTokenExpired(token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.exp * 1000 < Date.now();
-      } catch (e) {
-        return true;
-      }
-    }
-
-    if (isTokenExpired(token)) {
-      localStorage.removeItem('facdin_token');
-      alert('Tu sesión ha expirado.');
-      window.location.href = '/login.html';
-    }
-
-    // Decodificar JWT para obtener datos del empleado
-    function getEmpleadoFromToken() {
-      try {
-        const payload = atob(token.split('.')[1]);
-        return JSON.parse(payload);
-      } catch (e) {
-        return null;
-      }
-    }
-  </script>
 </head>
 <body>
   <div class="container">
@@ -237,7 +250,7 @@
 
   <script>
    
-    const empleado = getEmpleadoFromToken();
+    //const empleado = getEmpleadoFromToken();
 
     // Mostrar info del empleado
     document.getElementById('empleadoNombre').textContent = empleado?.email || 'Desconocido';
@@ -347,7 +360,7 @@ async function cargarEnlaces() {
         <td>${e.creadoPor || 'Desconocido'}</td>
         <td>${new Date(e.fecha).toLocaleString()}</td>
         <td class="${e.usado ? 'status-used' : 'status-unused'}">
-          ${e.usado ? 'Usado' : 'Pendiente'}
+          ${e.usado ? 'Asignado' : 'Pendiente'}
         </td>
       </tr>
     `).join('');

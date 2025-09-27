@@ -14,10 +14,10 @@ async function syncDatabase() {
 
     // Verifica que la tabla exista
     const tableExists = await sequelize.getQueryInterface().showAllTables();
-    if (tableExists.includes('registration_links')) {
-      console.log('🟢 Tabla "registration_links" creada correctamente');
+    if (tableExists.includes('empleados')) {
+      console.log('🟢 Tabla "empleados" creada correctamente');
     } else {
-      console.log('🔴 Tabla "registration_links" no fue creada');
+      console.log('🔴 Tabla "empleados" no fue creada');
     }
 
     process.exit(0);

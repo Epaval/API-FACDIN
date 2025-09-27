@@ -1,7 +1,8 @@
 // src/controllers/facturaController.js
 const { Client } = require('../models');
 const { sequelize } = require('../config/database');
-const redis = require('../config/redis'); // ✅ Importar redis
+const redis = require('../config/redis');
+const crypto = require('crypto'); // 🔐 Importar crypto
 
 /**
  * Endpoint público: Insertar una factura real
@@ -53,7 +54,7 @@ exports.insertarFactura = async (req, res) => {
 
     const schema = `cliente_${client.id}`;
 
-    // 🔑 Obtener datos de la caja desde Redis (no session)
+    // 🔑 Obtener datos de la caja desde Redis
     const cajaDataStr = await redis.get(`caja:${client.id}`);
     const cajaData = cajaDataStr ? JSON.parse(cajaDataStr) : null;
 
@@ -98,16 +99,43 @@ exports.insertarFactura = async (req, res) => {
     const iva = parseFloat((subtotal * 0.16).toFixed(2));
     const total = subtotal + iva;
 
+    // 🔐 Preparar datos para el hash (solo campos críticos)
+    const dataParaHash = {
+      numeroFactura: `F${nuevoNumeroFactura.toString().padStart(8, '0')}`,
+      rifEmisor: client.rif,
+      razonSocialEmisor: client.name,
+      rifReceptor,
+      razonSocialReceptor,
+      fechaEmision: new Date().toISOString().split('T')[0],
+      subtotal,
+      iva,
+      total,
+      cajaId,
+      impresoraFiscal,
+      detalles: detalles.map(d => ({
+        descripcion: d.descripcion,
+        cantidad: Number(d.cantidad),
+        precioUnitario: Number(d.precioUnitario),
+        montoTotal: Number((d.cantidad * d.precioUnitario).toFixed(2))
+      }))
+    };
+
+    // 🔐 Generar hash SHA-256
+    const hash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(dataParaHash))
+      .digest('hex');
+
     // Insertar factura
     const [factura] = await sequelize.query(
       `INSERT INTO "${schema}"."facturas" 
        (numero_factura, rif_emisor, razon_social_emisor, rif_receptor, razon_social_receptor, 
-        fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal") 
-       VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?, 'registrada', ?, ?) 
+        fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal", hash) 
+       VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?, 'registrada', ?, ?, ?) 
        RETURNING id`,
       {
         replacements: [
-          `F${nuevoNumeroFactura.toString().padStart(8, '0')}`,
+          dataParaHash.numeroFactura,
           client.rif,
           client.name,
           rifReceptor,
@@ -116,7 +144,8 @@ exports.insertarFactura = async (req, res) => {
           iva,
           total,
           cajaId,
-          impresoraFiscal
+          impresoraFiscal,
+          hash // ✅ Guardar hash
         ],
         transaction: t,
         type: sequelize.QueryTypes.INSERT
@@ -154,7 +183,7 @@ exports.insertarFactura = async (req, res) => {
           'crear_factura',
           'factura',
           facturaId,
-          `Factura registrada vía API`,
+          `Factura registrada vía API (hash: ${hash})`,
           req.headers['user-agent']?.substring(0, 100) || 'desconocido',
           req.ip || '127.0.0.1',
           req.get('User-Agent')?.substring(0, 200) || ''
@@ -165,16 +194,18 @@ exports.insertarFactura = async (req, res) => {
 
     await t.commit();
 
+    // ✅ Respuesta con hash incluido
     res.json({
       message: '✅ Factura registrada exitosamente',
-      numeroFactura: `F${nuevoNumeroFactura.toString().padStart(8, '0')}`,
+      numeroFactura: dataParaHash.numeroFactura,
       numeroControl: `NC${nuevoNumeroControl.toString().padStart(8, '0')}`,
       total: total.toFixed(2),
-      fechaEmision: new Date().toISOString().split('T')[0],
+      fechaEmision: dataParaHash.fechaEmision,
       cliente: {
         emisor: client.name,
         receptor: razonSocialReceptor
-      }
+      },
+      hash // 🔐 Incluir hash en la respuesta
     });
 
   } catch (error) {

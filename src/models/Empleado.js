@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'empleados',
     timestamps: true,
-    underscored: true // Usa snake_case en DB
+    underscored: true 
   });
 
   return Empleado;

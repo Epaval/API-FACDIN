@@ -22,21 +22,22 @@ async function seedAdmin() {
 
     // Hashear contraseña
     const saltRounds = 10;
-    const passwordHash = await bcrypt.hash('AgenteC1126', saltRounds);
+    const plainPassword = 'Agente1126'; // ← Define aquí la contraseña real
+    const passwordHash = await bcrypt.hash(plainPassword, saltRounds);
 
     // Crear admin
-    const agente1 = await Empleado.create({
+    const admin = await Empleado.create({
       email: 'agente1@facdin.com',
-      nombre: 'Agente de cuenta 1',
+      nombre: 'Julio Pérez',
       passwordHash,
       rol: 'agente',
       activo: true
     });
 
-    console.log('🎉 Admin creado exitosamente:');
-    console.log('Email: admin@facdin.com');
-    console.log('Contraseña: Admin1126'); // Solo para desarrollo
-    console.log('Rol:', agente1.rol);
+    console.log('🎉 Agente creado exitosamente:');
+    console.log('Email: agente1@facdin.com');
+    console.log('Contraseña:', plainPassword); // Mostrar la contraseña clara (solo en desarrollo)
+    console.log('Rol:', agente.rol);
 
   } catch (error) {
     console.error('❌ Error al sembrar admin:', error.message);

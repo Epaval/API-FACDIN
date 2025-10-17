@@ -214,3 +214,48 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+exports.registrarPrimerAdmin = async (req, res) => {
+  const { nombre, ficha, ci, email, password } = req.body;
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey) {
+    return res.status(401).json({ error: 'API Key requerida' });
+  }
+
+  try {
+    const client = await Client.findOne({ where: { apiKey } });
+    if (!client) {
+      return res.status(403).json({ error: 'API Key inválida' });
+    }
+
+    const schema = `cliente_${client.id}`;
+
+    // Verificar que no exista ya un admin
+    const [existente] = await sequelize.query(
+      `SELECT id FROM "${schema}"."usuarios_autorizados" LIMIT 1`
+    );
+
+    if (existente.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un empleado registrado' });
+    }
+
+    // Hashear contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crear admin
+    await sequelize.query(
+      `INSERT INTO "${schema}"."usuarios_autorizados" 
+       (nombre, ficha, ci, email, rol, password_hash, activo) 
+       VALUES (?, ?, ?, ?, 'admin', ?, true)`,
+      {
+        replacements: [nombre, ficha, ci, email, hashedPassword]
+      }
+    );
+
+    res.json({ message: 'Primer admin registrado exitosamente' });
+
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno' });
+  }
+};

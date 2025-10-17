@@ -63,28 +63,29 @@ class ClientSchemaService {
 
         // --- 2. Facturas ---
       await q(`CREATE TABLE IF NOT EXISTS "${schemaName}"."facturas" (
-        id SERIAL PRIMARY KEY,
-        numero_factura VARCHAR(50) NOT NULL UNIQUE,
-        rif_emisor VARCHAR(20) NOT NULL,
-        razon_social_emisor VARCHAR(255) NOT NULL,
-        rif_receptor VARCHAR(20) NOT NULL,
-        razon_social_receptor VARCHAR(255) NOT NULL,
-        fecha_emision DATE NOT NULL,
-        subtotal DECIMAL(15,2) NOT NULL,
-        iva DECIMAL(15,2) DEFAULT 0,
-        total DECIMAL(15,2) NOT NULL,
-        estado VARCHAR(20) DEFAULT 'registrada',
-        fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        "cajaId" VARCHAR(10),
-        "impresoraFiscal" VARCHAR(50),
-        hash VARCHAR(64) NOT NULL UNIQUE -- ← Hash SHA-256
-      );`);
+      id SERIAL PRIMARY KEY,
+      numero_factura VARCHAR(50) NOT NULL UNIQUE,
+      rif_emisor VARCHAR(20) NOT NULL,
+      razon_social_emisor VARCHAR(255) NOT NULL,
+      rif_receptor VARCHAR(20) NOT NULL,
+      razon_social_receptor VARCHAR(255) NOT NULL,
+      fecha_emision DATE NOT NULL,
+      subtotal DECIMAL(15,2) NOT NULL,
+      iva DECIMAL(15,2) DEFAULT 0,
+      total DECIMAL(15,2) NOT NULL,
+      estado VARCHAR(20) DEFAULT 'registrada',
+      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      "cajaId" VARCHAR(10),
+      "impresoraFiscal" VARCHAR(50),
+      hash_anterior VARCHAR(64), -- ← Hash de la factura anterior
+      hash_actual VARCHAR(64) NOT NULL UNIQUE -- ← Hash propio + anterior
+    );`);
 
     // Índices
     await q(`CREATE INDEX IF NOT EXISTS idx_facturas_numero_${clienteId} 
              ON "${schemaName}"."facturas" ("numero_factura");`);
-    await q(`CREATE INDEX IF NOT EXISTS idx_facturas_hash_${clienteId} 
-         ON "${schemaName}"."facturas" ("hash");`);         
+    await q(`CREATE INDEX IF NOT EXISTS idx_facturas_hash_actual_${clienteId} 
+         ON "${schemaName}"."facturas" ("hash_actual");`);         
     await q(`CREATE INDEX IF NOT EXISTS idx_facturas_fecha_${clienteId} 
              ON "${schemaName}"."facturas" ("fecha_emision");`);
     await q(`CREATE INDEX IF NOT EXISTS idx_facturas_estado_${clienteId} 

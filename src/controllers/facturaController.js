@@ -83,15 +83,24 @@ exports.insertarFactura = async (req, res) => {
       { transaction: t }
     );
 
+    if (!contador || contador.length === 0) {
+      await t.rollback();
+      return res.status(500).json({ error: 'No se pudo obtener el contador de facturación.' });
+    }
+
     const nuevoNumeroFactura = contador[0].ultimo_numero_factura + 1;
     const nuevoNumeroControl = contador[0].ultimo_numero_control + 1;
 
     await sequelize.query(
       `UPDATE "${schema}"."contador" 
-       SET ultimo_numero_factura = ${nuevoNumeroFactura}, 
-           ultimo_numero_control = ${nuevoNumeroControl},
-           fecha_actualizacion = NOW()`,
-      { transaction: t }
+       SET ultimo_numero_factura = $1, 
+           ultimo_numero_control = $2,
+           fecha_actualizacion = NOW()
+       WHERE id = $3`,
+      {
+        replacements: [nuevoNumeroFactura, nuevoNumeroControl, contador[0].id],
+        transaction: t
+      }
     );
 
     // Calcular totales
@@ -113,7 +122,7 @@ exports.insertarFactura = async (req, res) => {
       cajaId,
       impresoraFiscal,
       detalles: detalles.map(d => ({
-        descripcion: d.descripcion,
+        descripcion: d.descripcion.trim(),
         cantidad: Number(d.cantidad),
         precioUnitario: Number(d.precioUnitario),
         montoTotal: Number((d.cantidad * d.precioUnitario).toFixed(2))
@@ -131,7 +140,7 @@ exports.insertarFactura = async (req, res) => {
       `INSERT INTO "${schema}"."facturas" 
        (numero_factura, rif_emisor, razon_social_emisor, rif_receptor, razon_social_receptor, 
         fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal", hash) 
-       VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, ?, 'registrada', ?, ?, ?) 
+       VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6, $7, $8, 'registrada', $9, $10, $11) 
        RETURNING id`,
       {
         replacements: [
@@ -159,11 +168,11 @@ exports.insertarFactura = async (req, res) => {
       await sequelize.query(
         `INSERT INTO "${schema}"."detalles_factura" 
          (factura_id, descripcion, cantidad, precio_unitario, monto_total) 
-         VALUES (?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5)`,
         {
           replacements: [
             facturaId,
-            det.descripcion,
+            det.descripcion.trim(),
             det.cantidad,
             det.precioUnitario,
             det.cantidad * det.precioUnitario
@@ -177,7 +186,7 @@ exports.insertarFactura = async (req, res) => {
     await sequelize.query(
       `INSERT INTO "${schema}"."registro_eventos" 
        (accion, entidad, entidad_id, detalle, usuario, ip, user_agent) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       {
         replacements: [
           'crear_factura',
@@ -186,7 +195,7 @@ exports.insertarFactura = async (req, res) => {
           `Factura registrada vía API (hash: ${hash})`,
           req.headers['user-agent']?.substring(0, 100) || 'desconocido',
           req.ip || '127.0.0.1',
-          req.get('User-Agent')?.substring(0, 200) || ''
+          req.headers['user-agent']?.substring(0, 200) || ''
         ],
         transaction: t
       }
@@ -214,6 +223,101 @@ exports.insertarFactura = async (req, res) => {
     res.status(500).json({
       error: 'No se pudo registrar la factura',
       detalle: error.message
+    });
+  }
+};
+
+
+exports.verificarBlockchain = async (req, res) => {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey) {
+    return res.status(401).json({ valido: false, error: 'Acceso denegado. Se requiere API Key.' });
+  }
+
+  try {
+    // Buscar cliente por apiKey
+    const client = await Client.findOne({
+      where: { apiKey },
+      attributes: ['id', 'name']
+    });
+
+    if (!client) {
+      return res.status(403).json({ valido: false, error: 'API Key inválida o no autorizada.' });
+    }
+
+    const schema = `cliente_${client.id}`;
+
+    // Obtener todas las facturas ordenadas por ID
+    const [facturas] = await sequelize.query(
+      `SELECT id, numero_factura, hash_anterior, hash_actual FROM "${schema}"."facturas" ORDER BY id`,
+      { type: sequelize.QueryTypes.SELECT }
+    );
+
+    if (facturas.length === 0) {
+      return res.json({
+        cadena_valida: true,
+        total_facturas: 0,
+        mensaje: 'No hay facturas registradas.'
+      });
+    }
+
+    let hash_anterior_calculado = null;
+    const errores = [];
+
+    for (const f of facturas) {
+      // Recalcular lo que debería ser el hash_actual
+      const fakeData = {
+        id: f.id,
+        numero_factura: f.numero_factura,
+        hash_anterior: hash_anterior_calculado
+      };
+
+      const hashCalculado = crypto
+        .createHash('sha256')
+        .update(JSON.stringify(fakeData))
+        .digest('hex');
+
+      // Verificar hash_actual
+      if (hashCalculado !== f.hash_actual) {
+        errores.push({
+          id: f.id,
+          numero: f.numero_factura,
+          error: 'hash_actual no coincide',
+          esperado: hashCalculado,
+          encontrado: f.hash_actual
+        });
+      }
+
+      // Verificar que el hash_anterior coincida con el anterior real
+      if (f.hash_anterior !== hash_anterior_calculado) {
+        errores.push({
+          id: f.id,
+          numero: f.numero_factura,
+          error: 'hash_anterior roto',
+          esperado: hash_anterior_calculado,
+          encontrado: f.hash_anterior
+        });
+      }
+
+      // Actualizar el hash anterior para la siguiente iteración
+      hash_anterior_calculado = f.hash_actual;
+    }
+
+    res.json({
+      cadena_valida: errores.length === 0,
+      total_facturas: facturas.length,
+      errores,
+      mensaje: errores.length === 0
+        ? '✅ La cadena de facturas es válida e inmutable.'
+        : '❌ La cadena ha sido alterada o es inconsistente.'
+    });
+
+  } catch (error) {
+    console.error('Error al verificar blockchain:', error);
+    res.status(500).json({
+      valido: false,
+      error: 'No se pudo verificar la cadena de facturas'
     });
   }
 };

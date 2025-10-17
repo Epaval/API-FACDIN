@@ -132,7 +132,7 @@ catch {
 ==========PARA INSERTAR PRODUCTOS EN LA TABLAS DE UN CLIENTE=======
 
 # === Configuración ===
-$ApiKey = "fcd_22e17f1d07e7aca17c0fff382b5b901f6677e970a79744aa"  # ← Reemplaza si es necesario
+$ApiKey = "fcd_baf67a3555713d8721744d019ca4bce06e8558ed8bf84031"  # ← Reemplaza si es necesario
 $Url = "http://localhost:3001/api/facturas/insertar"
 
 # === Datos con caracteres UTF-8 correctos + cajaId e impresoraFiscal ===
@@ -224,7 +224,7 @@ try {
     -Uri "http://localhost:3001/api/usuarios/login" `
     -Method Post `
     -Headers @{
-      "x-api-key" = "fcd_a6fc9b72ee9555faded5d956485840d0260c1441d313e940"
+      "x-api-key" = "fcd_baf67a3555713d8721744d019ca4bce06e8558ed8bf84031"
       "Content-Type" = "application/json; charset=utf-8"
     } `
     -Body $BodyJson `

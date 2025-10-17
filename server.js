@@ -6,6 +6,7 @@ const session = require('express-session');
 
 const { sequelize } = require("./src/config/database");
 const apiRoutes = require("./src/routes");
+const invoiceRoutes = require('./src/routes/invoices');
 
 const app = express();
 
@@ -64,7 +65,7 @@ app.get("/api/health", (req, res) => {
 // ✅ RUTAS PÚBLICAS ESTÁTICAS
 // ========================
 app.use(express.static('public'));
-
+app.use('/api/facturas', invoiceRoutes);
 //===RUTA PARA FACTURAS========
 app.use('/api/facturas', require('./src/routes/facturas'));
 app.use('/api/notas', require('./src/routes/nota'));

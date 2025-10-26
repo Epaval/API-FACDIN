@@ -2,6 +2,7 @@
 const { Client } = require('../models');
 const { sequelize } = require('../config/database');
 const crypto = require('crypto');
+const { QueryTypes } = require('sequelize');
 
 /**
  * Endpoint público: Verificar integridad de una factura
@@ -154,4 +155,127 @@ exports.verificarFactura = async (req, res) => {
   }
 };
 
+/**
+ * Endpoint público: Obtener facturas recientes de un cliente con paginación y búsqueda
+ * GET /api/facturas/recientes
+ */
+exports.obtenerFacturasRecientes = async (req, res) => {
+  const { limit = 5, offset = 0, search = '' } = req.query;
+  const client = req.client;
 
+  try {
+    const schema = `cliente_${client.id}`;
+    let whereClause = '';
+    let replacements = { limit: parseInt(limit), offset: parseInt(offset) };
+
+    if (search) {
+      whereClause = `WHERE numero_factura ILIKE :search OR razon_social_receptor ILIKE :search`;
+      replacements.search = `%${search}%`;
+    }
+
+    // Obtener facturas con paginación y búsqueda
+    const facturas = await sequelize.query(
+      `SELECT 
+         id, numero_factura, razon_social_receptor, total, fecha_emision
+       FROM "${schema}"."facturas"
+       ${whereClause}
+       ORDER BY id DESC
+       LIMIT :limit OFFSET :offset`,
+      {
+        replacements,
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // Contar total de facturas para paginación
+    const [{ count }] = await sequelize.query(
+      `SELECT COUNT(*) as count
+       FROM "${schema}"."facturas"
+       ${whereClause}`,
+      {
+        replacements: search ? { search: `%${search}%` } : {},
+        type: QueryTypes.SELECT
+      }
+    );
+
+    // Formatear respuesta para el dashboard
+    const facturasFormateadas = facturas.map(f => ({
+      id: f.id,
+      numero: f.numero_factura,
+      cliente: f.razon_social_receptor,
+      total: f.total ? parseFloat(f.total).toFixed(2) : '0.00',
+      fecha: f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString() : 'N/A'
+    }));
+
+    res.json({
+      data: facturasFormateadas,
+      total: parseInt(count),
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+  } catch (error) {
+    console.error('Error al obtener facturas recientes:', error);
+    res.status(500).json({
+      error: 'No se pudieron obtener las facturas'
+    });
+  }
+};
+
+/**
+ * Endpoint para obtener detalles de una factura
+ * GET /api/facturas/detalle/:facturaId
+ */
+exports.obtenerDetalleFactura = async (req, res) => {
+  const { facturaId } = req.params;
+  const client = req.client;
+
+  try {
+    const schema = `cliente_${client.id}`;
+
+    // Obtener factura
+    const [factura] = await sequelize.query(
+      `SELECT 
+         id, numero_factura, razon_social_receptor, rif_receptor, total, subtotal, iva, fecha_emision
+       FROM "${schema}"."facturas"
+       WHERE id = :facturaId`,
+      {
+        replacements: { facturaId },
+        type: QueryTypes.SELECT
+      }
+    );
+
+    if (!factura) {
+      return res.status(404).json({ error: 'Factura no encontrada' });
+    }
+
+    // Obtener detalles de la factura
+    const detalles = await sequelize.query(
+      `SELECT descripcion, cantidad, precio_unitario, monto_total
+       FROM "${schema}"."detalles_factura"
+       WHERE factura_id = :facturaId
+       ORDER BY id`,
+      {
+        replacements: { facturaId },
+        type: QueryTypes.SELECT
+      }
+    );
+
+    res.json({
+      factura: {
+        ...factura,
+        total: factura.total ? parseFloat(factura.total).toFixed(2) : '0.00',
+        subtotal: factura.subtotal ? parseFloat(factura.subtotal).toFixed(2) : '0.00',
+        iva: factura.iva ? parseFloat(factura.iva).toFixed(2) : '0.00',
+        fecha: factura.fecha_emision ? new Date(factura.fecha_emision).toLocaleDateString() : 'N/A'
+      },
+      detalles
+    });
+
+  } catch (error) {
+    console.error('Error al obtener detalle de factura:', error);
+    res.status(500).json({
+      error: 'No se pudo obtener el detalle de la factura'
+    });
+  }
+};

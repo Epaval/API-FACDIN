@@ -1,8 +1,9 @@
 // src/controllers/facturaController.js
-const { Client } = require('../models');
+const { Client: ClientModel } = require('../models');
 const { sequelize } = require('../config/database');
 const redis = require('../config/redis');
-const crypto = require('crypto'); // 🔐 Importar crypto
+const crypto = require('crypto');
+const { QueryTypes } = require('sequelize');
 
 /**
  * Endpoint público: Insertar una factura real
@@ -40,8 +41,12 @@ exports.insertarFactura = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
+    console.log('✅ [insertarFactura] Iniciando proceso...');
+    console.log('📦 Datos recibidos:', { rifReceptor, razonSocialReceptor, detallesCount: detalles.length });
+    console.log('🔑 API Key:', apiKey);
+
     // Buscar cliente por apiKey
-    const client = await Client.findOne({
+    const client = await ClientModel.findOne({
       where: { apiKey },
       attributes: ['id', 'name', 'rif'],
       transaction: t
@@ -49,47 +54,120 @@ exports.insertarFactura = async (req, res) => {
 
     if (!client) {
       await t.rollback();
+      console.warn('❌ API Key no encontrada:', apiKey);
       return res.status(403).json({ error: 'API Key inválida o no autorizada.' });
     }
+
+    console.log('👤 Cliente encontrado:', client.toJSON());
 
     const schema = `cliente_${client.id}`;
 
     // 🔑 Obtener datos de la caja desde Redis
-    const cajaDataStr = await redis.get(`caja:${client.id}`);
-    const cajaData = cajaDataStr ? JSON.parse(cajaDataStr) : null;
-
-    if (!cajaData) {
+    let cajaData;
+    try {
+      const cajaDataStr = await redis.get(`caja:${client.id}`);
+      cajaData = cajaDataStr ? JSON.parse(cajaDataStr) : null;
+    } catch (err) {
       await t.rollback();
+      console.error('🔴 Error parsing Redis ', err);
+      return res.status(500).json({ error: 'Datos de caja corruptos en caché.' });
+    }
+
+    if (!cajaData || !cajaData.cajaId || !cajaData.impresoraFiscal) {
+      await t.rollback();
+      console.warn('⚠️ Caja no abierta para cliente:', client.id);
       return res.status(400).json({
         error: 'Debe abrir la caja antes de emitir facturas.'
       });
     }
 
     const { cajaId, impresoraFiscal } = cajaData;
+    console.log('🖨️ Caja:', { cajaId, impresoraFiscal });
 
-    // Verificar que el esquema existe
+    // Verificar que el esquema existe (PostgreSQL + Transacción)
     const [schemas] = await sequelize.query(
-      `SELECT schema_name FROM information_schema.schemata WHERE schema_name = '${schema}'`
+      `SELECT schema_name FROM information_schema.schemata WHERE schema_name = $1`,
+      {
+        bind: [schema],
+        type: QueryTypes.SELECT,
+        transaction: t
+      }
     );
 
     if (schemas.length === 0) {
       await t.rollback();
+      console.error('❌ Esquema no existe:', schema);
       return res.status(500).json({ error: 'El esquema del cliente no existe.' });
     }
 
     // 🔒 Obtener y actualizar contador
-    const [contador] = await sequelize.query(
+    const [contadorRaw] = await sequelize.query(
       `SELECT * FROM "${schema}"."contador" FOR UPDATE`,
-      { transaction: t }
+      { transaction: t, type: QueryTypes.SELECT }
     );
 
+    // ✅ Detectar si es un array o un objeto
+    let contador = Array.isArray(contadorRaw) ? contadorRaw : [contadorRaw];
+
+    let contadorId;
+    let ultimo_numero_factura = 0;
+    let ultimo_numero_control = 0;
+
     if (!contador || contador.length === 0) {
-      await t.rollback();
-      return res.status(500).json({ error: 'No se pudo obtener el contador de facturación.' });
+      console.log('⚠️ Contador no encontrado en esquema:', schema, 'Creando inicial...');
+      const [insertResult] = await sequelize.query(
+        `INSERT INTO "${schema}"."contador" (ultimo_numero_factura, ultimo_numero_control) VALUES (1, 1) RETURNING id`,
+        { transaction: t, type: QueryTypes.INSERT }
+      );
+
+      console.log('🔍 Resultado del INSERT:', insertResult);
+
+      let rawId = undefined;
+      if (insertResult && Array.isArray(insertResult) && insertResult.length > 0) {
+        rawId = insertResult[0].id;
+      } else if (insertResult && typeof insertResult === 'object' && insertResult.id) {
+        rawId = insertResult.id;
+      } else {
+        console.error('❌ Formato inesperado del INSERT:', insertResult);
+        throw new Error('No se pudo obtener el ID del contador recién insertado');
+      }
+
+      contadorId = rawId;
+
+      if (contadorId === undefined) {
+        throw new Error('No se pudo obtener el ID del contador recién insertado');
+      }
+      ultimo_numero_factura = 1;
+      ultimo_numero_control = 1;
+    } else {
+      // Si ya existía, usar valores actuales
+      if (!contador[0] || typeof contador[0] !== 'object') {
+        console.error('❌ El resultado de SELECT * FROM contador es inválido:', contador);
+        throw new Error('El resultado de la consulta al contador es inválido');
+      }
+      const fila = contador[0];
+      // ✅ Verificar que exista la columna 'id' antes de usarla
+      if (fila.id === undefined) {
+        console.error('❌ La fila del contador no tiene la columna "id":', fila);
+        throw new Error('La fila del contador no tiene la columna "id"');
+      }
+      contadorId = fila.id;
+      ultimo_numero_factura = fila.ultimo_numero_factura;
+      ultimo_numero_control = fila.ultimo_numero_control;
     }
 
-    const nuevoNumeroFactura = contador[0].ultimo_numero_factura + 1;
-    const nuevoNumeroControl = contador[0].ultimo_numero_control + 1;
+    const nuevoNumeroFactura = ultimo_numero_factura + 1;
+    const nuevoNumeroControl = ultimo_numero_control + 1;
+
+    console.log('🔍 Valores para UPDATE:', {
+      nuevoNumeroFactura,
+      nuevoNumeroControl,
+      contadorId
+    });
+
+    if (contadorId === undefined) {
+      throw new Error('contadorId es undefined antes del UPDATE');
+    }
 
     await sequelize.query(
       `UPDATE "${schema}"."contador" 
@@ -98,13 +176,18 @@ exports.insertarFactura = async (req, res) => {
            fecha_actualizacion = NOW()
        WHERE id = $3`,
       {
-        replacements: [nuevoNumeroFactura, nuevoNumeroControl, contador[0].id],
+        bind: [nuevoNumeroFactura, nuevoNumeroControl, contadorId],
         transaction: t
       }
     );
 
     // Calcular totales
-    const subtotal = detalles.reduce((sum, d) => sum + (d.precioUnitario * d.cantidad), 0);
+    const subtotal = detalles.reduce((sum, d) => {
+      const monto = Number(d.precioUnitario) * Number(d.cantidad);
+      if (isNaN(monto)) throw new Error('Precio o cantidad inválidos');
+      return sum + monto;
+    }, 0);
+
     const iva = parseFloat((subtotal * 0.16).toFixed(2));
     const total = subtotal + iva;
 
@@ -129,21 +212,28 @@ exports.insertarFactura = async (req, res) => {
       }))
     };
 
-    // 🔐 Generar hash SHA-256
-    const hash = crypto
+    // 🔐 Generar hash_actual SHA-256
+    const hashActual = crypto
       .createHash('sha256')
       .update(JSON.stringify(dataParaHash))
       .digest('hex');
+
+    // 🔐 Obtener hash_anterior de la última factura registrada
+    const [ultimaFactura] = await sequelize.query(
+      `SELECT hash_actual FROM "${schema}"."facturas" ORDER BY id DESC LIMIT 1`,
+      { transaction: t, type: QueryTypes.SELECT }
+    );
+    const hashAnterior = ultimaFactura && ultimaFactura.length > 0 ? ultimaFactura[0].hash_actual : null;
 
     // Insertar factura
     const [factura] = await sequelize.query(
       `INSERT INTO "${schema}"."facturas" 
        (numero_factura, rif_emisor, razon_social_emisor, rif_receptor, razon_social_receptor, 
-        fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal", hash) 
-       VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6, $7, $8, 'registrada', $9, $10, $11) 
+        fecha_emision, subtotal, iva, total, estado, "cajaId", "impresoraFiscal", hash_anterior, hash_actual) 
+       VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6, $7, $8, 'registrada', $9, $10, $11, $12) 
        RETURNING id`,
       {
-        replacements: [
+        bind: [
           dataParaHash.numeroFactura,
           client.rif,
           client.name,
@@ -154,10 +244,11 @@ exports.insertarFactura = async (req, res) => {
           total,
           cajaId,
           impresoraFiscal,
-          hash // ✅ Guardar hash
+          hashAnterior,
+          hashActual
         ],
         transaction: t,
-        type: sequelize.QueryTypes.INSERT
+        type: QueryTypes.INSERT
       }
     );
 
@@ -170,14 +261,15 @@ exports.insertarFactura = async (req, res) => {
          (factura_id, descripcion, cantidad, precio_unitario, monto_total) 
          VALUES ($1, $2, $3, $4, $5)`,
         {
-          replacements: [
+          bind: [
             facturaId,
             det.descripcion.trim(),
-            det.cantidad,
-            det.precioUnitario,
-            det.cantidad * det.precioUnitario
+            Number(det.cantidad),
+            Number(det.precioUnitario),
+            Number(det.cantidad) * Number(det.precioUnitario)
           ],
-          transaction: t
+          transaction: t,
+          type: QueryTypes.INSERT
         }
       );
     }
@@ -188,22 +280,24 @@ exports.insertarFactura = async (req, res) => {
        (accion, entidad, entidad_id, detalle, usuario, ip, user_agent) 
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       {
-        replacements: [
+        bind: [
           'crear_factura',
           'factura',
           facturaId,
-          `Factura registrada vía API (hash: ${hash})`,
+          `Factura registrada vía API (hash: ${hashActual})`,
           req.headers['user-agent']?.substring(0, 100) || 'desconocido',
           req.ip || '127.0.0.1',
           req.headers['user-agent']?.substring(0, 200) || ''
         ],
-        transaction: t
+        transaction: t,
+        type: QueryTypes.INSERT
       }
     );
 
     await t.commit();
 
     // ✅ Respuesta con hash incluido
+    console.log('✅ Factura registrada:', { facturaId, numero: dataParaHash.numeroFactura, total });
     res.json({
       message: '✅ Factura registrada exitosamente',
       numeroFactura: dataParaHash.numeroFactura,
@@ -214,12 +308,14 @@ exports.insertarFactura = async (req, res) => {
         emisor: client.name,
         receptor: razonSocialReceptor
       },
-      hash // 🔐 Incluir hash en la respuesta
+      hashActual,
+      hashAnterior
     });
 
   } catch (error) {
     await t.rollback();
-    console.error('Error al registrar factura:', error);
+    console.error('🚨 Error al registrar factura:', error.message);
+    console.error('🔧 Stack:', error.stack);
     res.status(500).json({
       error: 'No se pudo registrar la factura',
       detalle: error.message
@@ -227,7 +323,9 @@ exports.insertarFactura = async (req, res) => {
   }
 };
 
-
+/**
+ * Verificar integridad blockchain de facturas
+ */
 exports.verificarBlockchain = async (req, res) => {
   const apiKey = req.headers['x-api-key'];
 
@@ -236,8 +334,7 @@ exports.verificarBlockchain = async (req, res) => {
   }
 
   try {
-    // Buscar cliente por apiKey
-    const client = await Client.findOne({
+    const client = await ClientModel.findOne({
       where: { apiKey },
       attributes: ['id', 'name']
     });
@@ -247,11 +344,9 @@ exports.verificarBlockchain = async (req, res) => {
     }
 
     const schema = `cliente_${client.id}`;
-
-    // Obtener todas las facturas ordenadas por ID
     const [facturas] = await sequelize.query(
       `SELECT id, numero_factura, hash_anterior, hash_actual FROM "${schema}"."facturas" ORDER BY id`,
-      { type: sequelize.QueryTypes.SELECT }
+      { type: QueryTypes.SELECT }
     );
 
     if (facturas.length === 0) {
@@ -266,7 +361,6 @@ exports.verificarBlockchain = async (req, res) => {
     const errores = [];
 
     for (const f of facturas) {
-      // Recalcular lo que debería ser el hash_actual
       const fakeData = {
         id: f.id,
         numero_factura: f.numero_factura,
@@ -278,7 +372,6 @@ exports.verificarBlockchain = async (req, res) => {
         .update(JSON.stringify(fakeData))
         .digest('hex');
 
-      // Verificar hash_actual
       if (hashCalculado !== f.hash_actual) {
         errores.push({
           id: f.id,
@@ -289,7 +382,6 @@ exports.verificarBlockchain = async (req, res) => {
         });
       }
 
-      // Verificar que el hash_anterior coincida con el anterior real
       if (f.hash_anterior !== hash_anterior_calculado) {
         errores.push({
           id: f.id,
@@ -300,7 +392,6 @@ exports.verificarBlockchain = async (req, res) => {
         });
       }
 
-      // Actualizar el hash anterior para la siguiente iteración
       hash_anterior_calculado = f.hash_actual;
     }
 

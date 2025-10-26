@@ -22,7 +22,6 @@ app.use(session({
   cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 horas
 }));
 
-
 const PORT = process.env.PORT || 3001;
 
 // 🔥 Middlewares esenciales - VAN PRIMERO
@@ -65,27 +64,30 @@ app.get("/api/health", (req, res) => {
 // ✅ RUTAS PÚBLICAS ESTÁTICAS
 // ========================
 app.use(express.static('public'));
-app.use('/api/facturas', invoiceRoutes);
-//===RUTA PARA FACTURAS========
+
+
+//======= RUTAS FACTURAS ========
+// Rutas protegidas por API Key (verificar y recientes)
 app.use('/api/facturas', require('./src/routes/facturas'));
+
+// Rutas protegidas por token (insertar facturas)
+app.use('/api/facturas', require('./src/routes/facturasToken'));
+
+//======= RUTAS NOTAS =========
 app.use('/api/notas', require('./src/routes/nota'));
 
-
-//======= RUTAS ADMIN ==============
+//======= RUTAS ADMIN =========
 app.use('/api/admin', require('./src/routes/admin'));
 
-//========== RUTAS CAJAS=========
+//========== RUTAS CAJAS =======
 app.use('/api/caja', require('./src/routes/caja'));
 
-//=========== TOKEN ================
+//=========== TOKEN ===========
 app.use('/', require('./src/routes/redirect'));
 
-
-//=========RUTAS EMPLEADOS===========
+//========= RUTAS EMPLEADOS ====
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/usuarios', require('./src/routes/usuario'));
-
-
 
 // ✅ Manejo de errores global
 app.use((err, req, res, next) => {
@@ -96,7 +98,6 @@ app.use((err, req, res, next) => {
 });
 
 // ✅ Manejo de 404 - AL FINAL, SIN COMODINES
-// No uses '*', '/*', ni '*path'
 app.use((req, res) => {
   res.status(404).json({
     error: "Endpoint no encontrado",
@@ -114,16 +115,6 @@ const startServer = async () => {
 
     // Cargar modelos (para relaciones)
     const db = require("./src/models");
-
-    // Opcional: sincronizar en desarrollo
-    // if (process.env.NODE_ENV === 'development') {
-    //   await db.Client.sync();
-    //   await db.Invoice.sync();
-    // }
-
-    
-    
-
 
     console.log('🔧 Servidor listo para escuchar');
 

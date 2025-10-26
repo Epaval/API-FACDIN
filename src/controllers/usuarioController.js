@@ -259,3 +259,132 @@ exports.registrarPrimerAdmin = async (req, res) => {
     res.status(500).json({ error: 'Error interno' });
   }
 };
+
+/**
+ * Endpoint público: Obtener usuarios registrados de un cliente con paginación y búsqueda
+ * GET /api/usuarios/registrados
+ */
+exports.obtenerUsuariosRegistrados = async (req, res) => {
+  const { limit = 5, offset = 0, search = '', rol = '' } = req.query;
+  const apiKey = req.headers['x-api-key'];
+
+  try {
+    const client = await Client.findOne({ where: { apiKey } });
+    if (!client) {
+      return res.status(403).json({ error: 'API Key inválida o no autorizada' });
+    }
+
+    const schema = `cliente_${client.id}`;
+    let whereClause = 'WHERE 1=1';
+    let replacements = { limit: parseInt(limit), offset: parseInt(offset) };
+
+    if (search) {
+      whereClause += ` AND (nombre ILIKE :search OR ficha ILIKE :search OR ci ILIKE :search)`;
+      replacements.search = `%${search}%`;
+    }
+
+    if (rol) {
+      whereClause += ` AND rol = :rol`;
+      replacements.rol = rol;
+    }
+
+    // Obtener usuarios con paginación y búsqueda
+    const usuarios = await sequelize.query(
+      `SELECT 
+         id, nombre, ficha, ci, rol, activo, email, fecha_creacion
+       FROM "${schema}"."usuarios_autorizados"
+       ${whereClause}
+       ORDER BY id DESC
+       LIMIT :limit OFFSET :offset`,
+      {
+        replacements,
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    // Contar total de usuarios para paginación
+    const [{ count }] = await sequelize.query(
+      `SELECT COUNT(*) as count
+       FROM "${schema}"."usuarios_autorizados"
+       ${whereClause.replace('ORDER BY id DESC', '')}`,
+      {
+        replacements: { search: search ? `%${search}%` : undefined, rol: rol || undefined },
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    // Formatear respuesta
+    const usuariosFormateados = usuarios.map(u => ({
+      id: u.id,
+      nombre: u.nombre,
+      ficha: u.ficha,
+      ci: u.ci,
+      rol: u.rol,
+      activo: u.activo,
+      email: u.email,
+      fecha: u.fecha_creacion ? new Date(u.fecha_creacion).toLocaleDateString() : 'N/A'
+    }));
+
+    res.json({
+      data: usuariosFormateados,
+      total: parseInt(count),
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+  } catch (error) {
+    console.error('Error al obtener usuarios registrados:', error);
+    res.status(500).json({
+      error: 'No se pudieron obtener los usuarios'
+    });
+  }
+};
+
+/**
+ * Endpoint para obtener detalles de un usuario
+ * GET /api/usuarios/detalle/:usuarioId
+ */
+exports.obtenerDetalleUsuario = async (req, res) => {
+  const { usuarioId } = req.params;
+  const apiKey = req.headers['x-api-key'];
+
+  try {
+    const client = await Client.findOne({ where: { apiKey } });
+    if (!client) {
+      return res.status(403).json({ error: 'API Key inválida o no autorizada' });
+    }
+
+    const schema = `cliente_${client.id}`;
+
+    // Obtener usuario
+    const [usuario] = await sequelize.query(
+      `SELECT 
+         id, nombre, ficha, ci, rol, activo, email, fecha_creacion, fecha_actualizacion
+       FROM "${schema}"."usuarios_autorizados"
+       WHERE id = :usuarioId`,
+      {
+        replacements: { usuarioId },
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      usuario: {
+        ...usuario,
+        activo: usuario.activo ? 'Sí' : 'No',
+        fecha_creacion: usuario.fecha_creacion ? new Date(usuario.fecha_creacion).toLocaleDateString() : 'N/A',
+        fecha_actualizacion: usuario.fecha_actualizacion ? new Date(usuario.fecha_actualizacion).toLocaleDateString() : 'N/A'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener detalle de usuario:', error);
+    res.status(500).json({
+      error: 'No se pudo obtener el detalle del usuario'
+    });
+  }
+};

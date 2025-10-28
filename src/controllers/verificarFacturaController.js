@@ -223,7 +223,7 @@ exports.obtenerFacturasRecientes = async (req, res) => {
 };
 
 /**
- * Endpoint para obtener detalles de una factura
+ * Endpoint para obtener detalles de una factura incluyendo notas asociadas
  * GET /api/facturas/detalle/:facturaId
  */
 exports.obtenerDetalleFactura = async (req, res) => {
@@ -261,6 +261,19 @@ exports.obtenerDetalleFactura = async (req, res) => {
       }
     );
 
+    // ✅ Obtener notas asociadas a la factura
+    const notas = await sequelize.query(
+      `SELECT 
+         id, numero_control, tipo, motivo, monto_afectado, fecha_emision, estado
+       FROM "${schema}"."notas_credito_debito"
+       WHERE factura_id = :facturaId AND estado != 'anulada'
+       ORDER BY fecha_emision DESC`,
+      {
+        replacements: { facturaId },
+        type: QueryTypes.SELECT
+      }
+    );
+
     res.json({
       factura: {
         ...factura,
@@ -269,7 +282,8 @@ exports.obtenerDetalleFactura = async (req, res) => {
         iva: factura.iva ? parseFloat(factura.iva).toFixed(2) : '0.00',
         fecha: factura.fecha_emision ? new Date(factura.fecha_emision).toLocaleDateString() : 'N/A'
       },
-      detalles
+      detalles,
+      notas // ✅ Incluimos las notas en la respuesta
     });
 
   } catch (error) {

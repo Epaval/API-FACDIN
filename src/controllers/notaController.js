@@ -19,9 +19,12 @@ exports.crearNota = async (req, res) => {
     });
   }
 
-  if (monto_afectado <= 0) {
+  // ✅ Convertir monto_afectado a número
+  const montoNumerico = parseFloat(monto_afectado);
+  
+  if (isNaN(montoNumerico) || montoNumerico <= 0) {
     return res.status(400).json({
-      error: 'El monto afectado debe ser mayor que cero'
+      error: 'El monto afectado debe ser un número válido mayor que cero'
     });
   }
 
@@ -38,7 +41,8 @@ exports.crearNota = async (req, res) => {
 
     // Verificar que el esquema existe
     const [schemas] = await sequelize.query(
-      `SELECT schema_name FROM information_schema.schemata WHERE schema_name = '${schema}'`
+      `SELECT schema_name FROM information_schema.schemata WHERE schema_name = ?`,
+      { replacements: [schema], type: sequelize.QueryTypes.SELECT, transaction: t }
     );
     if (schemas.length === 0) {
       await t.rollback();
@@ -48,14 +52,25 @@ exports.crearNota = async (req, res) => {
     // Verificar que la factura exista
     const [facturas] = await sequelize.query(
       `SELECT id, numero_factura, total, estado FROM "${schema}"."facturas" WHERE id = ?`,
-      { replacements: [factura_id], transaction: t }
+      { replacements: [factura_id], transaction: t, type: sequelize.QueryTypes.SELECT }
     );
 
-    const factura =
-      Array.isArray(facturas) && facturas.length > 0 ? facturas[0] : null;
+    console.log('🔍 Resultado de búsqueda de factura:', facturas); // Log para depurar
+    console.log('🔍 Tipo de resultado:', typeof facturas); // Log para depurar
+
+    // ✅ Corrección: Detectar si es un array o un objeto
+    let factura;
+    if (Array.isArray(facturas) && facturas.length > 0) {
+      factura = facturas[0];
+    } else if (facturas && typeof facturas === 'object' && Object.keys(facturas).length > 0) {
+      factura = facturas;
+    } else {
+      factura = null;
+    }
 
     if (!factura) {
       await t.rollback();
+      console.log(`❌ Factura con ID ${factura_id} no encontrada en esquema ${schema}`);
       return res.status(404).json({ error: "Factura no encontrada" });
     }
 
@@ -68,9 +83,59 @@ exports.crearNota = async (req, res) => {
 
     const totalFactura = parseFloat(factura.total);
 
+    // 🔍 Validación: No permitir notas si el monto supera el total de la factura (excepto débitos)
+    if (montoNumerico > totalFactura) {
+      // Solo permitir montos mayores para notas de débito
+      console.log('ℹ️  Monto mayor al total, se creará nota de débito');
+    }
+
+    // 🔍 Validación avanzada: Calcular saldo disponible para notas de crédito
+    if (montoNumerico <= totalFactura) {
+      // Obtener suma de notas de crédito ya emitidas para esta factura
+      const [notasCredito] = await sequelize.query(
+        `SELECT COALESCE(SUM(monto_afectado), 0) as total_notas_credito
+         FROM "${schema}"."notas_credito_debito"
+         WHERE factura_id = ? AND tipo = 'credito' AND estado != 'anulada'`,
+        { replacements: [factura_id], transaction: t, type: sequelize.QueryTypes.SELECT }
+      );
+
+      console.log('🔍 Notas de crédito existentes:', notasCredito); // Log para depurar
+
+      // ✅ Corrección: Detectar si es un array o un objeto
+      let totalNotasCredito = 0;
+      if (Array.isArray(notasCredito) && notasCredito.length > 0) {
+        totalNotasCredito = parseFloat(notasCredito[0].total_notas_credito) || 0;
+      } else if (notasCredito && typeof notasCredito === 'object' && Object.keys(notasCredito).length > 0) {
+        totalNotasCredito = parseFloat(notasCredito.total_notas_credito) || 0;
+      }
+
+      const saldoDisponible = totalFactura - totalNotasCredito;
+
+      console.log('🔍 Saldo disponible para notas de crédito:', saldoDisponible); // Log para depurar
+
+      // Validar que el nuevo monto no exceda el saldo disponible
+      if (montoNumerico > saldoDisponible) {
+        await t.rollback();
+        return res.status(400).json({
+          error: `El monto solicitado (${montoNumerico.toFixed(2)}) excede el saldo disponible (${saldoDisponible.toFixed(2)}) para notas de crédito en esta factura`,
+          saldoDisponible: saldoDisponible.toFixed(2),
+          totalFactura: totalFactura.toFixed(2),
+          totalNotasCredito: totalNotasCredito.toFixed(2)
+        });
+      }
+
+      // Si el saldo disponible es cero, no permitir más notas de crédito
+      if (saldoDisponible <= 0) {
+        await t.rollback();
+        return res.status(400).json({
+          error: 'No se pueden emitir más notas de crédito: el saldo de la factura ya ha sido totalmente compensado'
+        });
+      }
+    }
+
     // 🔍 Determinar el tipo de nota según el monto
     let tipoFinal;
-    if (monto_afectado > totalFactura) {
+    if (montoNumerico > totalFactura) {
       tipoFinal = 'debito';
     } else {
       tipoFinal = 'credito';
@@ -79,10 +144,25 @@ exports.crearNota = async (req, res) => {
     // Generar número de control único
     const [contador] = await sequelize.query(
       `SELECT ultimo_numero_control FROM "${schema}"."contador" FOR UPDATE`,
-      { transaction: t }
+      { transaction: t, type: sequelize.QueryTypes.SELECT }
     );
 
-    const nuevoNumeroControl = contador[0].ultimo_numero_control + 1;
+    console.log('🔍 Resultado de búsqueda de contador:', contador); // Log para depurar
+    console.log('🔍 Tipo de resultado contador:', typeof contador); // Log para depurar
+
+    // ✅ Corrección: Detectar si es un array o un objeto para el contador
+    let contadorInfo;
+    if (Array.isArray(contador) && contador.length > 0) {
+      contadorInfo = contador[0];
+    } else if (contador && typeof contador === 'object' && Object.keys(contador).length > 0) {
+      contadorInfo = contador;
+    } else {
+      await t.rollback();
+      console.log(`❌ Contador no encontrado en esquema ${schema}`);
+      return res.status(500).json({ error: "Contador no encontrado" });
+    }
+
+    const nuevoNumeroControl = contadorInfo.ultimo_numero_control + 1;
 
     await sequelize.query(
       `UPDATE "${schema}"."contador" SET ultimo_numero_control = ?`,
@@ -100,7 +180,7 @@ exports.crearNota = async (req, res) => {
           factura_id,
           tipoFinal,
           motivo,
-          monto_afectado,
+          montoNumerico,
           `NC${nuevoNumeroControl.toString().padStart(8, '0')}`,
           req.email || 'sistema'
         ],
@@ -110,7 +190,7 @@ exports.crearNota = async (req, res) => {
     );
 
     // ✅ Solo anular factura si es Nota de Crédito con monto igual al total
-    if (tipoFinal === 'credito' && monto_afectado === totalFactura) {
+    if (tipoFinal === 'credito' && montoNumerico === totalFactura) {
       await sequelize.query(
         `UPDATE "${schema}"."facturas" SET estado = 'anulada' WHERE id = ?`,
         { replacements: [factura_id], transaction: t }
@@ -127,11 +207,11 @@ exports.crearNota = async (req, res) => {
       {
         replacements: [
           tipoFinal === 'credito' 
-            ? (monto_afectado === totalFactura ? 'emitir_nota_credito_anulacion' : 'emitir_nota_credito_parcial')
+            ? (montoNumerico === totalFactura ? 'emitir_nota_credito_anulacion' : 'emitir_nota_credito_parcial')
             : 'emitir_nota_debito',
           'nota',
           nota[0].id,
-          `Nota de ${tipoFinal} por ${motivo}, monto: ${monto_afectado}, afecta factura #${factura.numero_factura}`,
+          `Nota de ${tipoFinal} por ${motivo}, monto: ${montoNumerico}, afecta factura #${factura.numero_factura}`,
           req.email || 'sistema',
           req.ip || '127.0.0.1',
           req.get('User-Agent')?.substring(0, 200) || ''
@@ -147,17 +227,20 @@ exports.crearNota = async (req, res) => {
       notaId: nota[0].id,
       numeroControl: `NC${nuevoNumeroControl.toString().padStart(8, '0')}`,
       facturaAfectada: factura.numero_factura,
-      monto: monto_afectado.toFixed(2),
+      monto: montoNumerico.toFixed(2),
       tipo: tipoFinal,
-      accion: monto_afectado === totalFactura 
+      accion: montoNumerico === totalFactura 
         ? 'factura_anulada' 
-        : monto_afectado < totalFactura 
+        : montoNumerico < totalFactura 
           ? 'ajuste_parcial_no_anulado' 
           : 'nota_debito'
     });
 
   } catch (error) {
-    await t.rollback();
+    // ✅ Solo hacer rollback si la transacción aún está activa
+    if (t && t.finished !== 'commit' && t.finished !== 'rollback') {
+      await t.rollback();
+    }
     console.error('Error al crear nota:', error);
     res.status(500).json({
       error: 'No se pudo crear la nota',

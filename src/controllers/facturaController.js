@@ -412,3 +412,4 @@ exports.verificarBlockchain = async (req, res) => {
     });
   }
 };
+

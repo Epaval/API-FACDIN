@@ -1,7 +1,7 @@
-// src/controllers/cajaController.js
 const { Client } = require('../models');
 const { sequelize } = require('../config/database');
 const redis = require('../config/redis');
+const { io } = require('../../server'); // Importar io
 
 /**
  * Abre una caja fiscal asociada al cliente autenticado
@@ -45,25 +45,37 @@ exports.abrirCaja = async (req, res) => {
       fechaApertura: new Date().toISOString()
     }), { EX: 8 * 60 * 60 }); // 8 horas
 
-    //  Obtener user_agent de forma segura
+    // Obtener user_agent de forma segura
     const userAgent = req.get('User-Agent') || req.headers['user-agent'] || 'desconocido';
 
-    // Registrar evento - ahora con 6 valores correctos
+    // Registrar evento
     await sequelize.query(
       `INSERT INTO "${schema}"."registro_eventos" 
        (accion, entidad, detalle, usuario, ip, user_agent) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
-          'apertura_caja',                           
-          'caja',                                   
-          `Caja ${cajaId} abierta con impresora ${impresoraFiscal}`, 
-          req.email || 'sistema',                   
-          req.ip || '127.0.0.1',                  
-          userAgent.substring(0, 255)               
+          'apertura_caja',
+          'caja',
+          `Caja ${cajaId} abierta con impresora ${impresoraFiscal}`,
+          req.email || 'sistema',
+          req.ip || '127.0.0.1',
+          userAgent.substring(0, 255)
         ]
       }
     );
+
+    // ✅ Notificar a todos los clientes conectados sobre el cambio
+    if (io) {
+      io.emit('cambiar-estado-caja', {
+        type: 'cambiar-estado-caja',
+        payload: {
+          cajaId: `caja${client.id}`, // Ajustar según tu estructura
+          estado: 'abierta',
+          usuario: req.user?.name || client.name || 'Usuario'
+        }
+      });
+    }
 
     res.json({
       message: '✅ Caja abierta exitosamente',
@@ -143,6 +155,18 @@ exports.cerrarCaja = async (req, res) => {
       }
     );
 
+    // ✅ Notificar a todos los clientes conectados sobre el cambio
+    if (io) {
+      io.emit('cambiar-estado-caja', {
+        type: 'cambiar-estado-caja',
+        payload: {
+          cajaId: `caja${client.id}`, // Ajustar según tu estructura
+          estado: 'cerrada',
+          usuario: req.user?.name || client.name || 'Usuario'
+        }
+      });
+    }
+
     res.json({
       message: '✅ Caja cerrada exitosamente',
       cajaId: cajaData.cajaId,
@@ -155,6 +179,42 @@ exports.cerrarCaja = async (req, res) => {
     res.status(500).json({
       error: 'No se pudo cerrar la caja',
       detalle: error.message
+    });
+  }
+};
+
+/**
+ * Obtener estado actual de las cajas (endpoint adicional si lo necesitas)
+ */
+exports.obtenerEstadoCajas = async (req, res) => {
+  const apiKey = req.headers['x-api-key'];
+
+  if (!apiKey) {
+    return res.status(401).json({ error: 'Acceso denegado. Se requiere API Key.' });
+  }
+
+  try {
+    const client = await Client.findOne({ where: { apiKey } });
+
+    if (!client) {
+      return res.status(403).json({ error: 'API Key inválida o no autorizada.' });
+    }
+
+    // Verificar estado de caja en Redis
+    const cajaDataStr = await redis.get(`caja:${client.id}`);
+    const cajaData = cajaDataStr ? JSON.parse(cajaDataStr) : null;
+
+    res.json({
+      cajaId: client.id,
+      estado: cajaData ? 'abierta' : 'cerrada',
+      abierto: !!cajaData,
+      usuario: cajaData ? (cajaData.usuario || 'Usuario') : null
+    });
+
+  } catch (error) {
+    console.error('Error al obtener estado de cajas:', error);
+    res.status(500).json({
+      error: 'No se pudo obtener el estado de las cajas'
     });
   }
 };

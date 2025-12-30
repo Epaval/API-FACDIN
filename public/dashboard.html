@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🔐 Panel FACDIN-API</title>
+  <title>🔐 Panel Administrativo FACDIN</title>
+
+  <!-- Font Awesome para íconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- ⚠️ Protección temprana: bloquear acceso antes de cargar cualquier contenido -->
   <script>
@@ -11,7 +15,6 @@
     const token = localStorage.getItem('facdin_token');
 
     if (!token) {
-      // No hay token → fuera
       window.location.replace('/login.html');
       throw new Error('No autorizado');
     }
@@ -31,7 +34,6 @@
       throw new Error('Token expirado');
     }
 
-    // Decodificar JWT para uso en frontend
     function getEmpleadoFromToken() {
       try {
         const payload = atob(token.split('.')[1]);
@@ -41,7 +43,6 @@
       }
     }
 
-    // Hacer disponible globalmente
     const empleado = getEmpleadoFromToken();
     if (!empleado || !empleado.email?.endsWith('@facdin.com')) {
       localStorage.removeItem('facdin_token');
@@ -50,357 +51,1330 @@
     }
   </script>
 
-  <!-- Solo carga estilos si pasa la validación -->
   <style>
+    /* ===== VARIABLES Y RESET ===== */
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --primary-light: #eef2ff;
+      --secondary: #7209b7;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --danger: #ef476f;
+      --dark: #1a1a2e;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --gray-light: #e9ecef;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --box-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.12);
+      --transition: all 0.3s ease;
+      --sidebar-width: 260px;
+    }
+
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f6f9;
-      color: #333;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      color: var(--dark);
       line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    header {
+    /* ===== LAYOUT PRINCIPAL ===== */
+    .app-container {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #007bff;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+      min-height: 100vh;
     }
 
-    header h1 {
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, var(--dark) 0%, #16213e 100%);
+      color: white;
+      padding: 2rem 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    .sidebar-header {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .logo i {
+      color: var(--primary);
       font-size: 1.8rem;
     }
 
-    .user-info {
-      text-align: right;
-      font-size: 0.95rem;
+    .nav-menu {
+      list-style: none;
+      padding: 0 1rem;
+    }
+
+    .nav-item {
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem 1.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(67, 97, 238, 0.15);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .nav-link i {
+      width: 20px;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    .user-profile {
+      margin-top: auto;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-info-sidebar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .user-details h4 {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .user-details p {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    /* ===== CONTENIDO PRINCIPAL ===== */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 2rem;
+      transition: var(--transition);
+    }
+
+    /* ===== HEADER ===== */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--gray-light);
+    }
+
+    .page-title h1 {
+      font-size: 1.8rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
     .btn {
-      padding: 12px 24px;
-      background: #007bff;
-      color: white;
+      padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 0.9rem;
       cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .btn:hover {
-      background: #0056b3;
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--box-shadow-hover);
     }
 
     .btn-danger {
-      background: #dc3545;
+      background: var(--danger);
+      color: white;
     }
 
     .btn-danger:hover {
-      background: #c82333;
+      background: #e0355f;
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #05c08e;
+    }
+
+    /* ===== TARJETAS ===== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
 
     .card {
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 1.5rem;
+      transition: var(--transition);
+      border: 1px solid var(--gray-light);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--box-shadow-hover);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--gray-light);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      color: var(--primary);
+    }
+
+    .stats-card {
+      text-align: center;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    /* ===== TABLAS ===== */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      background: white;
     }
 
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
+    thead {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
     }
 
     th {
-      background-color: #f8f9fa;
+      padding: 1rem 1.5rem;
+      text-align: left;
       font-weight: 600;
-      color: #495057;
-    }
-
-    tr:hover {
-      background-color: #f1f3f5;
-    }
-
-    .status-used {
-      color: #dc3545;
-      font-weight: bold;
-    }
-
-    .status-unused {
-      color: #28a745;
-      font-weight: bold;
-    }
-
-    .no-data {
-      text-align: center;
-      color: #6c757d;
-      padding: 20px;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      color: #6c757d;
       font-size: 0.9rem;
     }
-  </style>
-</head>
-<body>
-  <div class="container">
 
-    <!-- Encabezado con info del usuario y logout -->
-    <header>
-      <h1>🔐 Panel Administrativo FACDIN-API</h1>
-      <div class="user-info">
-        <p><strong>Usuario:</strong> <span id="empleadoNombre">Cargando...</span></p>
-        <p><strong>Rol:</strong> <span id="empleadoRol">-</span></p>
-        <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
-      </div>
-    </header>
-
-    <!-- Botón para generar enlace -->
-    <div class="card">
-      <h2>➕ Generar Enlace de Registro</h2>
-      <button class="btn" onclick="generarEnlace()">Generar Nuevo Enlace</button>
-      <div id="result"></div>
-    </div>
-
-    <!-- Tabla de Clientes -->
-    <div class="card">
-      <h2>👥 Clientes Registrados</h2>
-      <table id="clientesTable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Rif.</th>
-            <th>Fecha de Registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="4" class="no-data">Cargando clientes...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Historial de Enlaces Generados -->
-    <div class="card">
-      <h2>🔗 Historial de Enlaces Generados</h2>
-      <table id="enlacesTable">
-        <thead>
-          <tr>
-            <th>Enlace Acortado</th>
-            <th>Creado Por</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="4" class="no-data">Cargando enlaces...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Enlaces no asignados -->
-    <div class="card">
-      <h2>🕒 Enlaces Sin Asignar a Cliente</h2>
-      <p>Enlaces generados pero aún no usados para registrar un nuevo cliente.</p>
-      <table id="sinClienteTable">
-        <thead>
-          <tr>
-            <th>Enlace</th>
-            <th>Fecha de Creación</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="2" class="no-data">Verificando enlaces huérfanos...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <footer>
-      &copy; 2025 FACDIN-API. Todos los derechos reservados.
-    </footer>
-
-  </div>
-
-  <script>
-   
-    //const empleado = getEmpleadoFromToken();
-
-    // Mostrar info del empleado
-    document.getElementById('empleadoNombre').textContent = empleado?.email || 'Desconocido';
-    document.getElementById('empleadoRol').textContent = empleado?.rol || 'N/A';
-
-    // Cargar datos al iniciar
-    window.onload = () => {
-      cargarClientes();
-      cargarEnlaces();
-      verificarSinCliente();
-    };
-
-    // Botón de logout
-    function logout() {
-      fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).finally(() => {
-        localStorage.removeItem('facdin_token');
-        window.location.href = '/login.html';
-      });
+    tbody tr {
+      border-bottom: 1px solid var(--gray-light);
+      transition: var(--transition);
     }
 
-    // Generar nuevo enlace
-    async function generarEnlace() {
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = '<p>Generando...</p>';
+    tbody tr:hover {
+      background-color: var(--primary-light);
+    }
 
-      const res = await fetch('/api/admin/generar-enlace', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    td {
+      padding: 1rem 1.5rem;
+      font-size: 0.95rem;
+    }
 
-      const data = await res.json();
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-      if (res.ok) {
-        resultDiv.innerHTML = `
-          <p><strong>✅ Enlace generado:</strong></p>
-          <a href="${data.link}" target="_blank">${data.link}</a>
-          <p><small>Expira en 3 minutos.</small></p>
-        `;
-        setTimeout(() => {
-          cargarEnlaces(); // Actualizar lista
-        }, 1000);
-      } else {
-        resultDiv.innerHTML = `<span style="color:red">❌ Error: ${data.error}</span>`;
+    .badge-success {
+      background-color: rgba(6, 214, 160, 0.1);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background-color: rgba(255, 209, 102, 0.1);
+      color: #e6b400;
+    }
+
+    .badge-danger {
+      background-color: rgba(239, 71, 111, 0.1);
+      color: var(--danger);
+    }
+
+    /* ===== ENLACES ===== */
+    .link-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .link-preview:hover {
+      background: var(--primary-light);
+    }
+
+    .copy-link {
+      background: none;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .copy-link:hover {
+      color: var(--primary);
+      background: var(--gray-light);
+    }
+
+    /* ===== MODAL Y NOTIFICACIONES ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
-    // Cargar clientes
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.5rem;
+      color: var(--dark);
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--gray);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .close-modal:hover {
+      color: var(--danger);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--gray-light);
+      text-align: center;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+
+      .top-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: var(--transition);
+      }
+
+      .mobile-menu-toggle:hover {
+        background: var(--primary-dark);
+        transform: scale(1.05);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== LOADING Y ESTADOS ===== */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--gray-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--gray);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* ===== UTILITIES ===== */
+    .text-success {
+      color: var(--success);
+    }
+
+    .text-warning {
+      color: #e6b400;
+    }
+
+    .text-danger {
+      color: var(--danger);
+    }
+
+    .text-muted {
+      color: var(--gray);
+    }
+
+    .mb-3 {
+      margin-bottom: 1.5rem;
+    }
+
+    .mt-3 {
+      margin-top: 1.5rem;
+    }
+
+    .d-flex {
+      display: flex;
+    }
+
+    .align-center {
+      align-items: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .gap-2 {
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <i class="fas fa-shield-alt"></i>
+          <span>FACDIN</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#" class="nav-link active">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="cargarClientes()">
+            <i class="fas fa-users"></i>
+            <span>Clientes</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="cargarEnlaces()">
+            <i class="fas fa-link"></i>
+            <span>Enlaces</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            <span>Estadísticas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-cog"></i>
+            <span>Configuración</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="user-profile">
+        <div class="user-info-sidebar">
+          <div class="user-avatar">
+            <span id="avatarInitials">JP</span>
+          </div>
+          <div class="user-details">
+            <h4 id="sidebarNombre">Cargando...</h4>
+            <p id="sidebarRol">Administrador</p>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <header class="top-header">
+        <div class="page-title">
+          <h1><i class="fas fa-shield-alt"></i> Panel Administrativo</h1>
+        </div>
+        <div class="header-actions">
+          
+          <button class="btn btn-primary" onclick="generarEnlace()">
+            <i class="fas fa-plus-circle"></i> Nuevo Enlace
+          </button>
+          <button class="btn btn-danger" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Salir
+          </button>
+        </div>
+      </header>
+
+      <!-- ESTADÍSTICAS RÁPIDAS -->
+      <div class="dashboard-grid mb-3">
+        <div class="card stats-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-number" id="totalClientes">0</div>
+          <div class="stat-label">Clientes Registrados</div>
+        </div>
+
+        <div class="card stats-card">
+          <div class="stat-icon">
+            <i class="fas fa-link"></i>
+          </div>
+          <div class="stat-number" id="totalEnlaces">0</div>
+          <div class="stat-label">Enlaces Generados</div>
+        </div>
+
+        <div class="card stats-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-number" id="enlacesPendientes">0</div>
+          <div class="stat-label">Enlaces Pendientes</div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h2 class="card-title"><i class="fas fa-users"></i> Clientes Registrados</h2>
+          <button class="btn btn-primary btn-sm" onclick="cargarClientes()">
+            <i class="fas fa-sync-alt"></i> Actualizar
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table id="clientesTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>RIF</th>
+                <th>Fecha Registro</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="loading">
+                  <div class="loading-spinner"></div>
+                  <p>Cargando clientes...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ENLACES GENERADOS -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h2 class="card-title"><i class="fas fa-link"></i> Historial de Enlaces</h2>
+          <button class="btn btn-primary btn-sm" onclick="cargarEnlaces()">
+            <i class="fas fa-sync-alt"></i> Actualizar
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table id="enlacesTable">
+            <thead>
+              <tr>
+                <th>Enlace</th>
+                <th>Creado Por</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="loading">
+                  <div class="loading-spinner"></div>
+                  <p>Cargando enlaces...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ENLACES SIN ASIGNAR -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title"><i class="fas fa-clock"></i> Enlaces Pendientes</h2>
+        </div>
+        <div class="table-responsive">
+          <table id="sinClienteTable">
+            <thead>
+              <tr>
+                <th>Enlace</th>
+                <th>Fecha Creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="loading">
+                  <div class="loading-spinner"></div>
+                  <p>Verificando enlaces pendientes...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="footer">
+        <p>&copy; 2025 FACDIN-API v1.0.0 | Todos los derechos reservados</p>
+      </footer>
+    </main>
+  </div>
+
+  <!-- MODAL PARA NUEVO ENLACE -->
+  <div id="enlaceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-link"></i> Nuevo Enlace Generado</h3>
+        <button class="close-modal" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>El enlace de registro ha sido generado exitosamente.</p>
+        <div class="link-container"
+          style="background: var(--primary-light); padding: 1rem; border-radius: var(--border-radius); margin: 1rem 0;">
+          <code id="generatedLink" style="word-break: break-all; display: block; margin-bottom: 1rem;"></code>
+          <button class="btn btn-primary" onclick="copyLink()">
+            <i class="fas fa-copy"></i> Copiar Enlace
+          </button>
+        </div>
+        <p class="text-muted"><small><i class="fas fa-clock"></i> Este enlace expirará en 3 minutos.</small></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    // Mostrar información del usuario
+    document.addEventListener('DOMContentLoaded', () => {
+      const nombre = empleado?.nombre || empleado?.email || 'Usuario';
+      const rol = empleado?.rol || 'N/A';
+
+      // Actualizar sidebar
+      document.getElementById('sidebarNombre').textContent = nombre;
+      document.getElementById('sidebarRol').textContent = rol.charAt(0).toUpperCase() + rol.slice(1);
+
+      // Iniciales para avatar
+      const initials = nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      document.getElementById('avatarInitials').textContent = initials;
+
+      // Cargar datos iniciales
+      cargarEstadisticas();
+      cargarClientes();
+      cargarEnlaces();
+    });
+
+    // ===== FUNCIONES PRINCIPALES =====
+
+    async function cargarEstadisticas() {
+      try {
+        const [clientesRes, enlacesRes] = await Promise.all([
+          fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('/api/admin/enlaces-generados', { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        if (clientesRes.ok && enlacesRes.ok) {
+          const clientes = await clientesRes.json();
+          const enlaces = await enlacesRes.json();
+
+          // Actualizar contadores
+          document.getElementById('totalClientes').textContent = clientes.length;
+          document.getElementById('totalEnlaces').textContent = enlaces.length;
+
+          // Contar enlaces pendientes
+          const pendientes = enlaces.filter(e => !e.usado).length;
+          document.getElementById('enlacesPendientes').textContent = pendientes;
+        }
+      } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+      }
+    }
+
     async function cargarClientes() {
       const tbody = document.querySelector('#clientesTable tbody');
-      tbody.innerHTML = '<tr><td colspan="4" class="no-data">Cargando...</td></tr>';
 
       try {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="loading">
+              <div class="loading-spinner"></div>
+              <p>Cargando clientes...</p>
+            </td>
+          </tr>
+        `;
+
         const res = await fetch('/api/clients', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) throw new Error('No autorizado');
+        if (!res.ok) throw new Error('Error al cargar clientes');
 
         const clientes = await res.json();
 
         if (clientes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay clientes registrados</td></tr>';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">
+                <i class="fas fa-users"></i>
+                <p>No hay clientes registrados</p>
+              </td>
+            </tr>
+          `;
           return;
         }
 
         tbody.innerHTML = clientes.map(c => `
           <tr>
-            <td>${c.id}</td>
-            <td>${c.name}</td>
-            <td>${c.rif}</td>
-            <td>${new Date(c.fechaCreacion).toLocaleString()}</td>
+            <td><strong>#${c.id}</strong></td>
+            <td>
+              <div style="font-weight: 600;">${c.name}</div>
+              <small class="text-muted">${c.email || 'Sin email'}</small>
+            </td>
+            <td><code>${c.rif}</code></td>
+            <td>${new Date(c.fechaCreacion).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</td>
+            <td>
+              <span class="badge badge-success">Activo</span>
+            </td>
           </tr>
         `).join('');
+
+        // Actualizar estadísticas
+        document.getElementById('totalClientes').textContent = clientes.length;
+
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="4" class="no-data">Error al cargar clientes</td></tr>';
+        console.error('Error cargando clientes:', err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Error al cargar clientes</p>
+              <small>${err.message}</small>
+            </td>
+          </tr>
+        `;
       }
     }
 
-    // Cargar enlaces generados
-async function cargarEnlaces() {
-  const tbody = document.querySelector('#enlacesTable tbody');
-  tbody.innerHTML = '<tr><td colspan="4" class="no-data">Cargando...</td></tr>';
-
-  try {
-    const res = await fetch('/api/admin/enlaces-generados', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!res.ok) throw new Error('No autorizado');
-
-    const enlaces = await res.json();
-
-    if (enlaces.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="no-data">No se han generado enlaces</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = enlaces.map(e => `
-      <tr>
-       <td>${e.cliente || 'Pendiente'}</td>
-        <td>${e.creadoPor || 'Desconocido'}</td>
-        <td>${new Date(e.fecha).toLocaleString()}</td>
-        <td class="${e.usado ? 'status-used' : 'status-unused'}">
-          ${e.usado ? 'Asignado' : 'Pendiente'}
-        </td>
-      </tr>
-    `).join('');
-
-  } catch (err) {
-    console.error('Error cargando enlaces:', err);
-    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Error al cargar enlaces</td></tr>';
-  }
-}
-
-    // Verificar enlaces no usados (sin cliente asociado)
-    async function verificarSinCliente() {
-      const tbody = document.querySelector('#sinClienteTable tbody');
-      tbody.innerHTML = '<tr><td colspan="2" class="no-data">Verificando...</td></tr>';
+    async function cargarEnlaces() {
+      const tbody = document.querySelector('#enlacesTable tbody');
 
       try {
-        const [clientesRes, enlacesRes] = await Promise.all([
-          fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-          fetch('/api/admin/registration_links', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
-        ]);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="loading">
+              <div class="loading-spinner"></div>
+              <p>Cargando enlaces...</p>
+            </td>
+          </tr>
+        `;
 
-        const clientesConRegistro = new Set(clientesRes.map(c => c.apiKey)); // Asumiendo que apiKey es el vínculo
-        const enlacesSinCliente = enlacesRes.filter(e => !e.used);
+        const res = await fetch('/api/admin/enlaces-generados', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        if (enlacesSinCliente.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="2" class="no-data">Todos los enlaces han sido usados</td></tr>';
+        if (!res.ok) throw new Error('No autorizado');
+
+        const enlaces = await res.json();
+
+        if (enlaces.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">
+                <i class="fas fa-link"></i>
+                <p>No se han generado enlaces</p>
+              </td>
+            </tr>
+          `;
           return;
         }
 
-        tbody.innerHTML = enlacesSinCliente.map(e => `
+        tbody.innerHTML = enlaces.map(e => `
           <tr>
-            <td><a href="${e.enlace}" target="_blank">${e.enlace}</a></td>
-            <td>${new Date(e.fecha).toLocaleString()}</td>
+            <td>
+              <a href="${e.enlace || '#'}" target="_blank" class="link-preview">
+                <i class="fas fa-external-link-alt"></i>
+                <span>${(e.enlace || '').substring(0, 40)}...</span>
+              </a>
+            </td>
+            <td>${e.creadoPor || empleado.nombre || 'Sistema'}</td>
+            <td>${new Date(e.fecha).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</td>
+            <td>
+              <span class="badge ${e.usado ? 'badge-success' : 'badge-warning'}">
+                ${e.usado ? 'Asignado' : 'Pendiente'}
+              </span>
+            </td>
+            <td>
+              <button class="copy-link" onclick="copyToClipboard('${e.enlace}')" title="Copiar enlace">
+                <i class="fas fa-copy"></i>
+              </button>
+            </td>
           </tr>
         `).join('');
+
+        // Actualizar estadísticas
+        document.getElementById('totalEnlaces').textContent = enlaces.length;
+        const pendientes = enlaces.filter(e => !e.usado).length;
+        document.getElementById('enlacesPendientes').textContent = pendientes;
+
+        // Cargar enlaces pendientes
+        verificarSinCliente();
+
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="2" class="no-data">Error al verificar enlaces</td></tr>';
+        console.error('Error cargando enlaces:', err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Error al cargar enlaces</p>
+              <small>${err.message}</small>
+            </td>
+          </tr>
+        `;
       }
     }
+
+    async function verificarSinCliente() {
+      const tbody = document.querySelector('#sinClienteTable tbody');
+
+      try {
+        tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="loading">
+          <div class="loading-spinner"></div>
+          <p>Verificando enlaces pendientes...</p>
+        </td>
+      </tr>
+    `;
+
+        // Primero intentar la ruta principal
+        const res = await fetch('/api/admin/enlaces-generados', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+
+        const enlaces = await res.json();
+
+        // Depuración: mostrar en consola
+        console.log('🔍 Enlaces recibidos:', enlaces);
+
+        // Asegurarnos de que es un array
+        if (!Array.isArray(enlaces)) {
+          console.error('La respuesta no es un array:', typeof enlaces, enlaces);
+          throw new Error('Formato de respuesta inválido. Se esperaba un array.');
+        }
+
+        // Opción 1: Filtrar por campo "usado" (recomendado)
+        const enlacesSinCliente = enlaces.filter(e => !e.usado);
+
+        // Opción 2: Filtrar por clienteId si existe
+        // const enlacesSinCliente = enlaces.filter(e => !e.usado && (!e.clienteId || e.clienteId === null));
+
+        console.log('✅ Enlaces sin cliente:', enlacesSinCliente);
+
+        if (enlacesSinCliente.length === 0) {
+          tbody.innerHTML = `
+        <tr>
+          <td colspan="3" class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No hay enlaces pendientes</p>
+            <small>
+              Total en el sistema: ${enlaces.length}<br>
+              Enlaces usados: ${enlaces.filter(e => e.usado).length}
+            </small>
+          </td>
+        </tr>
+      `;
+          return;
+        }
+
+        // Mostrar los enlaces
+        tbody.innerHTML = enlacesSinCliente.map(e => {
+          // Construir URL si no viene en la respuesta
+          let enlaceUrl = e.enlace;
+          if (!enlaceUrl) {
+            const baseUrl = window.location.origin;
+            const shortId = e.shortId || e.token?.substring(0, 8) || 'unknown';
+            enlaceUrl = `${baseUrl}/r/${shortId}`;
+          }
+
+          return `
+        <tr>
+          <td>
+            <div style="margin-bottom: 4px;">
+              <a href="${enlaceUrl}" target="_blank" class="link-preview">
+                <i class="fas fa-external-link-alt"></i>
+                ${enlaceUrl.substring(0, 50)}...
+              </a>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--gray);">
+              <strong>Token:</strong> ${e.token?.substring(0, 16)}...
+              ${e.shortId ? `<br><strong>Short ID:</strong> ${e.shortId}` : ''}
+              ${e.creadoPor ? `<br><strong>Creado por:</strong> ${e.creadoPor}` : ''}
+            </div>
+          </td>
+          <td>
+            ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : 'Fecha no disponible'}
+          </td>
+          <td>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${enlaceUrl}')" title="Copiar enlace">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button class="btn btn-warning btn-sm" onclick="console.log(${JSON.stringify(e)})" title="Ver datos completos">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+        }).join('');
+
+      } catch (err) {
+        console.error('❌ Error en verificarSinCliente:', err);
+
+        // Mostrar error detallado
+        tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error al verificar enlaces</p>
+          <small><strong>${err.message}</strong></small>
+          <div style="text-align: left; margin-top: 1rem; font-size: 0.8rem;">
+            <p><strong>Posibles soluciones:</strong></p>
+            <ol style="text-align: left; padding-left: 1.5rem;">
+              <li>Verifica que el backend esté corriendo</li>
+              <li>Verifica que la ruta /api/admin/enlaces-generados exista</li>
+              <li>Abre la consola (F12) para más detalles</li>
+            </ol>
+          </div>
+          <button class="btn btn-primary mt-2" onclick="verificarSinCliente()">
+            <i class="fas fa-redo"></i> Reintentar
+          </button>
+        </td>
+      </tr>
+    `;
+      }
+    }
+
+
+    async function generarEnlace() {
+      const generateBtn = document.querySelector('.btn-primary[onclick="generarEnlace()"]');
+      const originalText = generateBtn.innerHTML;
+
+      try {
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+        generateBtn.disabled = true;
+
+        const res = await fetch('/api/admin/generar-enlace', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Mostrar modal con el enlace
+          const modal = document.getElementById('enlaceModal');
+          const linkElement = document.getElementById('generatedLink');
+
+          linkElement.textContent = data.link;
+          modal.style.display = 'flex';
+
+          // Actualizar lista de enlaces después de un segundo
+          setTimeout(() => {
+            cargarEnlaces();
+            cargarEstadisticas();
+          }, 1000);
+        } else {
+          alert(`Error: ${data.error || 'No se pudo generar el enlace'}`);
+        }
+
+      } catch (error) {
+        console.error('Error generando enlace:', error);
+        alert('Error al generar el enlace. Verifica la conexión.');
+      } finally {
+        generateBtn.innerHTML = originalText;
+        generateBtn.disabled = false;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('enlaceModal').style.display = 'none';
+    }
+
+    function copyLink() {
+      const linkText = document.getElementById('generatedLink').textContent;
+      copyToClipboard(linkText);
+
+      // Mostrar confirmación
+      const copyBtn = document.querySelector('.btn-primary[onclick="copyLink()"]');
+      const originalText = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+
+      setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+      }, 2000);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Mostrar notificación (podrías implementar un sistema de notificaciones)
+        showNotification('Enlace copiado al portapapeles', 'success');
+      }).catch(err => {
+        console.error('Error al copiar:', err);
+        showNotification('Error al copiar', 'error');
+      });
+    }
+
+    function showNotification(message, type = 'info') {
+      // Crear elemento de notificación
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        background: ${type === 'success' ? 'var(--success)' : 'var(--danger)'};
+        color: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+      `;
+
+      notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+
+      document.body.appendChild(notification);
+
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+
+    // Añadir estilos para animaciones de notificación
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    function logout() {
+      if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).finally(() => {
+          localStorage.removeItem('facdin_token');
+          window.location.href = '/login.html';
+        });
+      }
+    }
+
+    // Menu responsive
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toggle sidebar en móvil
+      const mobileToggle = document.createElement('button');
+      mobileToggle.className = 'mobile-menu-toggle';
+      mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+      mobileToggle.onclick = () => document.querySelector('.sidebar').classList.toggle('active');
+
+      document.querySelector('.header-actions').prepend(mobileToggle);
+
+      // Cerrar sidebar al hacer clic fuera en móvil
+      document.addEventListener('click', (e) => {
+        const sidebar = document.querySelector('.sidebar');
+        const toggleBtn = document.querySelector('.mobile-menu-toggle');
+
+        if (window.innerWidth <= 768 &&
+          !sidebar.contains(e.target) &&
+          e.target !== toggleBtn &&
+          !toggleBtn.contains(e.target)) {
+          sidebar.classList.remove('active');
+        }
+      });
+    });
+
+    // Actualizar datos cada 30 segundos
+    setInterval(() => {
+      cargarEstadisticas();
+    }, 30000);
+
   </script>
 </body>
-</html>
 
+</html>

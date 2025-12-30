@@ -1,5 +1,10 @@
-// scripts/crear-empleado.js
 require('dotenv').config();
+const bcrypt = require('bcrypt');
+const readline = require('readline').createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
 const { sequelize } = require('../src/config/database');
 const { Empleado } = require('../src/models');
 
@@ -8,19 +13,31 @@ async function crearEmpleado() {
     await sequelize.authenticate();
     console.log('✅ Conectado a la base de datos');
 
+    const email = 'ahitza-agente@facdin.com';
+    const nombre = 'Ahitza Martinez';
+    const password = 'password123'; // Cambiar en producción
+    const passwordHash = await bcrypt.hash(password, 10);
+
     const [empleado, creado] = await Empleado.findOrCreate({
-      where: { email: 'admin@facdin.com' },
+      where: { email },
       defaults: {
-        nombre: 'Administrador FacDin',
-        rol: 'admin',
+        nombre,
+        passwordHash,
+        rol: 'agente',
         activo: true
       }
     });
 
     if (creado) {
-      console.log('✅ Empleado creado:', empleado.toJSON());
+      console.log('\n✅ EMPLEADO CREADO EXITOSAMENTE');
+      console.log('===============================');
+      console.log(`📧 Email: ${email}`);
+      console.log(`👤 Nombre: ${nombre}`);
+      console.log(`🔑 Contraseña temporal: ${password}`);
+      console.log(`🎯 Rol: agente`);
+      console.log('\n⚠️  IMPORTANTE: Cambia la contraseña en el primer inicio');
     } else {
-      console.log('ℹ️  El empleado ya existe:', empleado.toJSON());
+      console.log('ℹ️  El empleado ya existe en el sistema');
     }
 
     process.exit(0);

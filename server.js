@@ -1,4 +1,10 @@
 require("dotenv").config();
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CLEANUP === 'true') {
+  const CleanupService = require('./services/CleanupService');
+  const cleanupService = new CleanupService();
+  cleanupService.iniciar();
+}
+
 const express = require("express");
 const cors = require("cors");
 const session = require('express-session');

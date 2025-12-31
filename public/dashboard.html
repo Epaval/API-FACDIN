@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -381,6 +381,54 @@
       font-size: 0.9rem;
     }
 
+    /* ===== BUSCADORES Y CONTROLES DE TABLA ===== */
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      border: 2px solid #e5e7eb;
+      border-radius: var(--border-radius);
+      font-size: 0.95rem;
+      transition: var(--transition);
+      background: var(--white);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .table-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+
     /* ===== TABLAS ===== */
     .table-responsive {
       overflow-x: auto;
@@ -476,6 +524,74 @@
       background: var(--gray-light);
     }
 
+    /* ===== PAGINACIÓN ===== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      flex-wrap: wrap;
+    }
+
+    .pagination-btn {
+      min-width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #e5e7eb;
+      background: var(--white);
+      color: var(--dark);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .pagination-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-info {
+      margin: 0 1rem;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .pagination-select {
+      padding: 0.5rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--dark);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .pagination-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
     /* ===== MODALES ===== */
     .modal {
       display: none;
@@ -507,6 +623,7 @@
         opacity: 0;
         transform: translateY(-30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -623,7 +740,8 @@
       .main-content {
         margin-left: 0;
         padding: 1.25rem;
-        padding-top: 5rem; /* espacio para el botón hamburguesa */
+        padding-top: 5rem;
+        /* espacio para el botón hamburguesa */
       }
 
       .top-header {
@@ -641,6 +759,15 @@
         grid-template-columns: 1fr;
       }
 
+      .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+
       .modal-content {
         padding: 1.5rem;
       }
@@ -651,6 +778,16 @@
 
       .modal-footer .btn {
         width: 100%;
+      }
+
+      .pagination {
+        gap: 0.25rem;
+      }
+
+      .pagination-btn {
+        min-width: 35px;
+        height: 35px;
+        font-size: 0.85rem;
       }
     }
 
@@ -690,6 +827,13 @@
       font-size: 2.5rem;
       margin-bottom: 1rem;
       opacity: 0.5;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+      font-style: italic;
     }
 
     /* ===== UTILITIES ===== */
@@ -735,6 +879,99 @@
 
     .text-center {
       text-align: center;
+    }
+
+    /* Estilos adicionales para el modal */
+    .modal-icon.danger {
+      color: var(--danger);
+    }
+
+    .form-check-input:checked {
+      background-color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .form-check-input:focus {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.25);
+    }
+
+    /* Agregar al final del CSS */
+    .dropdown-toggle {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .dropdown-toggle::after {
+      content: "▾";
+      margin-left: 8px;
+      font-size: 1.1rem;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow-hover);
+      padding: 0.5rem 0;
+      min-width: 240px;
+      z-index: 1000;
+      border: 1px solid var(--gray-light);
+    }
+
+    .dropdown-menu.show {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--dark);
+      transition: var(--transition);
+      border-radius: 4px;
+      margin: 0.125rem 0.25rem;
+    }
+
+    .dropdown-item:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .dropdown-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--gray-light);
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -811,6 +1048,33 @@
             <i class="fas fa-sign-out-alt"></i> Salir
           </button>
         </div>
+        <!-- Reemplazar el botón simple por un dropdown -->
+        <div class="dropdown" style="position: relative; display: inline-block;">
+          <button class="btn btn-warning dropdown-toggle" id="dropdownLimpieza" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false" title="Acciones de limpieza">
+            <i class="fas fa-broom"></i> Limpieza
+          </button>
+          <div class="dropdown-menu" aria-labelledby="dropdownLimpieza" style="position: absolute; background: white; border-radius: var(--border-radius); 
+              box-shadow: var(--box-shadow-hover); padding: 0.5rem; min-width: 220px; z-index: 1000;">
+            <button class="dropdown-item" onclick="confirmarLimpiezaExpirados()"
+              style="display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+              <i class="fas fa-clock text-warning"></i>
+              <div>
+                <div style="font-weight: 600;">Limpiar Expirados</div>
+                <small class="text-muted">Enlaces > 24h</small>
+              </div>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" onclick="confirmarLimpiezaNoUsados()"
+              style="display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+              <i class="fas fa-times-circle text-danger"></i>
+              <div>
+                <div style="font-weight: 600;">Eliminar No Usados</div>
+                <small class="text-muted">Enlaces con used=false</small>
+              </div>
+            </button>
+          </div>
+        </div>
       </header>
 
       <!-- ESTADÍSTICAS RÁPIDAS -->
@@ -841,13 +1105,26 @@
       </div>
 
       <!-- CLIENTES -->
-      <div class="card mb-3">
+      <div class="card mb-3" id="clientesSection">
         <div class="card-header">
           <h2 class="card-title"><i class="fas fa-users"></i> Clientes Registrados</h2>
           <button class="btn btn-primary btn-sm" onclick="cargarClientes()">
             <i class="fas fa-sync-alt"></i> Actualizar
           </button>
         </div>
+
+        <!-- Buscador para clientes -->
+        <div class="table-controls">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchClientes" placeholder="Buscar por RIF (J123456789)..."
+              onkeyup="filtrarClientes()">
+          </div>
+          <div class="table-info" id="clientesInfo">
+            Mostrando 0 de 0 clientes
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table id="clientesTable">
             <thead>
@@ -859,7 +1136,7 @@
                 <th>Estado</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="clientesBody">
               <tr>
                 <td colspan="5" class="loading">
                   <div class="loading-spinner"></div>
@@ -869,16 +1146,41 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Paginación para clientes -->
+        <div class="pagination" id="clientesPagination">
+          <button class="pagination-btn" onclick="changePage('clientes', -1)" disabled>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="pagination-info">Página <span id="clientesCurrentPage">1</span> de <span
+              id="clientesTotalPages">1</span></span>
+          <button class="pagination-btn" onclick="changePage('clientes', 1)" disabled>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ENLACES GENERADOS -->
-      <div class="card mb-3">
+      <div class="card mb-3" id="enlacesSection">
         <div class="card-header">
           <h2 class="card-title"><i class="fas fa-link"></i> Historial de Enlaces</h2>
           <button class="btn btn-primary btn-sm" onclick="cargarEnlaces()">
             <i class="fas fa-sync-alt"></i> Actualizar
           </button>
         </div>
+
+        <!-- Buscador para enlaces -->
+        <div class="table-controls">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchEnlaces" placeholder="Buscar por creador o enlace..."
+              onkeyup="filtrarEnlaces()">
+          </div>
+          <div class="table-info" id="enlacesInfo">
+            Mostrando 0 de 0 enlaces
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table id="enlacesTable">
             <thead>
@@ -890,7 +1192,7 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="enlacesBody">
               <tr>
                 <td colspan="5" class="loading">
                   <div class="loading-spinner"></div>
@@ -900,13 +1202,41 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Paginación para enlaces -->
+        <div class="pagination" id="enlacesPagination">
+          <button class="pagination-btn" onclick="changePage('enlaces', -1)" disabled>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="pagination-info">Página <span id="enlacesCurrentPage">1</span> de <span
+              id="enlacesTotalPages">1</span></span>
+          <button class="pagination-btn" onclick="changePage('enlaces', 1)" disabled>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ENLACES SIN ASIGNAR -->
-      <div class="card">
+      <div class="card" id="pendientesSection">
         <div class="card-header">
           <h2 class="card-title"><i class="fas fa-clock"></i> Enlaces Pendientes</h2>
+          <button class="btn btn-primary btn-sm" onclick="verificarSinCliente()">
+            <i class="fas fa-sync-alt"></i> Actualizar
+          </button>
         </div>
+
+        <!-- Buscador para pendientes -->
+        <div class="table-controls">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchPendientes" placeholder="Buscar por token o fecha..."
+              onkeyup="filtrarPendientes()">
+          </div>
+          <div class="table-info" id="pendientesInfo">
+            Mostrando 0 de 0 enlaces
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table id="sinClienteTable">
             <thead>
@@ -916,7 +1246,7 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="pendientesBody">
               <tr>
                 <td colspan="3" class="loading">
                   <div class="loading-spinner"></div>
@@ -925,6 +1255,18 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Paginación para pendientes -->
+        <div class="pagination" id="pendientesPagination">
+          <button class="pagination-btn" onclick="changePage('pendientes', -1)" disabled>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="pagination-info">Página <span id="pendientesCurrentPage">1</span> de <span
+              id="pendientesTotalPages">1</span></span>
+          <button class="pagination-btn" onclick="changePage('pendientes', 1)" disabled>
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
 
@@ -1025,13 +1367,183 @@
     </div>
   </div>
 
+  <!-- MODAL DE LIMPIEZA DE ENLACES NO USADOS -->
+  <div id="limpiezaNoUsadosModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-times-circle"></i> Eliminar Enlaces No Usados</h3>
+        <button class="close-modal" onclick="closeModal('limpiezaNoUsadosModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon danger">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h4 class="text-center mb-3">¿Eliminar todos los enlaces no usados?</h4>
+
+        <div class="card mb-3" style="background: #fee2e2; border: 1px solid #fca5a5;">
+          <div class="card-body">
+            <h5><i class="fas fa-trash-alt text-danger"></i> Estadísticas de no usados:</h5>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Enlaces no usados (used=false):</span>
+              <strong id="noUsadosCount" class="text-danger">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Shortlinks no usados:</span>
+              <strong id="shortlinksNoUsadosCount" class="text-danger">0</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2"
+              style="border-top: 1px solid #fca5a5; padding-top: 0.5rem;">
+              <span style="font-weight: 600;">Total a eliminar:</span>
+              <strong id="totalNoUsados" class="text-danger" style="font-size: 1.2rem;">0</strong>
+            </div>
+            <hr>
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> Se eliminarán todos los enlaces donde used = false
+            </small>
+          </div>
+        </div>
+
+        <div class="alert alert-danger"
+          style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+          <div class="d-flex align-items-start gap-2">
+            <i class="fas fa-skull-crossbones" style="color: #dc2626; font-size: 1.2rem;"></i>
+            <div>
+              <strong class="text-danger">⚠️ ADVERTENCIA CRÍTICA:</strong>
+              <p class="mb-1" style="font-size: 0.9rem;">Esta acción eliminará permanentemente <strong>TODOS</strong>
+                los enlaces no utilizados.</p>
+              <p class="mb-0" style="font-size: 0.85rem;">
+                <strong>Esto incluye:</strong><br>
+                • Enlaces de registro recién generados<br>
+                • Enlaces pendientes de activación<br>
+                • Shortlinks asociados no utilizados
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="confirmarEliminacion"
+            style="width: 1.2em; height: 1.2em; margin-right: 0.5rem;">
+          <label class="form-check-label" for="confirmarEliminacion" style="font-size: 0.9rem;">
+            Confirmo que entiendo que esta acción es irreversible y deseo proceder
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('limpiezaNoUsadosModal')">Cancelar</button>
+        <button class="btn btn-danger" onclick="ejecutarLimpiezaNoUsados()" id="btnConfirmarLimpiezaNoUsados" disabled>
+          <i class="fas fa-trash-alt"></i> Eliminar No Usados
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE LIMPIEZA DE ENLACES EXPIRADOS -->
+  <div id="limpiezaExpiradosModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-clock text-warning"></i> Limpiar Enlaces Expirados</h3>
+        <button class="close-modal" onclick="closeModal('limpiezaExpiradosModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon warning">
+          <i class="fas fa-clock"></i>
+        </div>
+        <h4 class="text-center mb-3">¿Eliminar enlaces expirados (mayores a 24h)?</h4>
+
+        <div class="card mb-3" style="background: #fef3c7; border: 1px solid #f59e0b;">
+          <div class="card-body">
+            <h5><i class="fas fa-clock text-warning"></i> Estadísticas de expirados:</h5>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Enlaces expirados (>24h):</span>
+              <strong id="expiradosCount" class="text-warning">Calculando...</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Shortlinks expirados:</span>
+              <strong id="shortlinksExpiradosCount" class="text-warning">Calculando...</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2"
+              style="border-top: 1px solid #f59e0b; padding-top: 0.5rem;">
+              <span style="font-weight: 600;">Total a eliminar:</span>
+              <strong id="totalExpirados" class="text-warning" style="font-size: 1.2rem;">Calculando...</strong>
+            </div>
+            <hr>
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> Se eliminarán todos los enlaces creados hace más de 24 horas
+            </small>
+          </div>
+        </div>
+
+        <div class="alert alert-warning"
+          style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+          <div class="d-flex align-items-start gap-2">
+            <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.2rem;"></i>
+            <div>
+              <strong class="text-warning">⚠️ ADVERTENCIA:</strong>
+              <p class="mb-1" style="font-size: 0.9rem;">Esta acción eliminará permanentemente todos los enlaces con más de 24 horas de antigüedad.</p>
+              <p class="mb-0" style="font-size: 0.85rem;">
+                <strong>Esto incluye:</strong><br>
+                • Enlaces de registro antiguos<br>
+                • Enlaces que ya fueron utilizados<br>
+                • Shortlinks asociados expirados
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="confirmarEliminacionExpirados"
+            style="width: 1.2em; height: 1.2em; margin-right: 0.5rem;">
+          <label class="form-check-label" for="confirmarEliminacionExpirados" style="font-size: 0.9rem;">
+            Confirmo que entiendo que esta acción es irreversible y deseo proceder
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('limpiezaExpiradosModal')">Cancelar</button>
+        <button class="btn btn-warning" onclick="ejecutarLimpiezaExpirados()" id="btnConfirmarLimpiezaExpirados" disabled>
+          <i class="fas fa-trash-alt"></i> Eliminar Expirados
+        </button>
+      </div>
+    </div>
+  </div>
+
+
   <script>
+    // Variables globales para el estado de las tablas
+    const tableState = {
+      clientes: {
+        data: [],
+        filteredData: [],
+        currentPage: 1,
+        pageSize: 5,
+        totalPages: 1,
+        searchTerm: ''
+      },
+      enlaces: {
+        data: [],
+        filteredData: [],
+        currentPage: 1,
+        pageSize: 5,
+        totalPages: 1,
+        searchTerm: ''
+      },
+      pendientes: {
+        data: [],
+        filteredData: [],
+        currentPage: 1,
+        pageSize: 5,
+        totalPages: 1,
+        searchTerm: ''
+      }
+    };
+
     // Sistema de modales
     function showModal(modalId) {
       const modal = document.getElementById(modalId);
       if (modal) {
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevenir scroll
+        document.body.style.overflow = 'hidden';
       }
     }
 
@@ -1039,7 +1551,7 @@
       const modal = document.getElementById(modalId);
       if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Restaurar scroll
+        document.body.style.overflow = 'auto';
       }
     }
 
@@ -1053,6 +1565,11 @@
       document.getElementById('successTitle').textContent = title;
       document.getElementById('successMessage').textContent = message;
       showModal('successModal');
+    }
+
+    function showInfo(title, message) {
+      // Puedes crear un modal de información o usar el de éxito/error
+      showSuccess(title, message);
     }
 
     function confirmarLogout() {
@@ -1095,7 +1612,7 @@
         if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
           const isClickInsideSidebar = sidebar.contains(e.target);
           const isClickOnToggle = mobileToggle && mobileToggle.contains(e.target);
-          
+
           if (!isClickInsideSidebar && !isClickOnToggle) {
             sidebar.classList.remove('active');
           }
@@ -1106,7 +1623,287 @@
       cargarEstadisticas();
       cargarClientes();
       cargarEnlaces();
+      
+      // Configurar checkbox para habilitar botones de eliminación
+      configurarCheckboxes();
     });
+
+    // ===== FUNCIONES DE PAGINACIÓN =====
+
+    function changePage(tableType, direction) {
+      const state = tableState[tableType];
+      const newPage = state.currentPage + direction;
+
+      if (newPage >= 1 && newPage <= state.totalPages) {
+        state.currentPage = newPage;
+        renderTable(tableType);
+      }
+    }
+
+    function updatePagination(tableType) {
+      const state = tableState[tableType];
+      const currentPageElement = document.getElementById(`${tableType}CurrentPage`);
+      const totalPagesElement = document.getElementById(`${tableType}TotalPages`);
+      const prevBtn = document.querySelector(`#${tableType}Pagination .pagination-btn:first-child`);
+      const nextBtn = document.querySelector(`#${tableType}Pagination .pagination-btn:last-child`);
+      const infoElement = document.getElementById(`${tableType}Info`);
+
+      if (currentPageElement) currentPageElement.textContent = state.currentPage;
+      if (totalPagesElement) totalPagesElement.textContent = state.totalPages;
+
+      if (prevBtn) prevBtn.disabled = state.currentPage === 1;
+      if (nextBtn) nextBtn.disabled = state.currentPage === state.totalPages;
+
+      if (infoElement) {
+        const start = ((state.currentPage - 1) * state.pageSize) + 1;
+        const end = Math.min(start + state.pageSize - 1, state.filteredData.length);
+        const total = state.filteredData.length;
+
+        if (state.searchTerm) {
+          infoElement.textContent = `Mostrando ${start}-${end} de ${total} resultados (filtrado)`;
+        } else {
+          infoElement.textContent = `Mostrando ${start}-${end} de ${total} ${tableType}`;
+        }
+      }
+    }
+
+    function renderTable(tableType) {
+      const state = tableState[tableType];
+      const tbody = document.getElementById(`${tableType}Body`);
+      const startIndex = (state.currentPage - 1) * state.pageSize;
+      const endIndex = startIndex + state.pageSize;
+      const pageData = state.filteredData.slice(startIndex, endIndex);
+
+      switch (tableType) {
+        case 'clientes':
+          renderClientesTable(pageData);
+          break;
+        case 'enlaces':
+          renderEnlacesTable(pageData);
+          break;
+        case 'pendientes':
+          renderPendientesTable(pageData);
+          break;
+      }
+
+      updatePagination(tableType);
+    }
+
+    // ===== FUNCIONES DE FILTRADO =====
+
+    function filtrarClientes() {
+      const searchInput = document.getElementById('searchClientes');
+      const searchTerm = searchInput.value.toLowerCase();
+      const state = tableState.clientes;
+
+      state.searchTerm = searchTerm;
+      state.currentPage = 1;
+
+      if (searchTerm) {
+        state.filteredData = state.data.filter(cliente =>
+          cliente.rif.toLowerCase().includes(searchTerm) ||
+          cliente.name.toLowerCase().includes(searchTerm) ||
+          (cliente.email && cliente.email.toLowerCase().includes(searchTerm))
+        );
+      } else {
+        state.filteredData = [...state.data];
+      }
+
+      state.totalPages = Math.ceil(state.filteredData.length / state.pageSize) || 1;
+      renderTable('clientes');
+    }
+
+    function filtrarEnlaces() {
+      const searchInput = document.getElementById('searchEnlaces');
+      const searchTerm = searchInput.value.toLowerCase();
+      const state = tableState.enlaces;
+
+      state.searchTerm = searchTerm;
+      state.currentPage = 1;
+
+      if (searchTerm) {
+        state.filteredData = state.data.filter(enlace =>
+          (enlace.enlace && enlace.enlace.toLowerCase().includes(searchTerm)) ||
+          (enlace.creadoPor && enlace.creadoPor.toLowerCase().includes(searchTerm)) ||
+          (enlace.token && enlace.token.toLowerCase().includes(searchTerm))
+        );
+      } else {
+        state.filteredData = [...state.data];
+      }
+
+      state.totalPages = Math.ceil(state.filteredData.length / state.pageSize) || 1;
+      renderTable('enlaces');
+    }
+
+    function filtrarPendientes() {
+      const searchInput = document.getElementById('searchPendientes');
+      const searchTerm = searchInput.value.toLowerCase();
+      const state = tableState.pendientes;
+
+      state.searchTerm = searchTerm;
+      state.currentPage = 1;
+
+      if (searchTerm) {
+        state.filteredData = state.data.filter(enlace =>
+          (enlace.token && enlace.token.toLowerCase().includes(searchTerm)) ||
+          (enlace.fecha && enlace.fecha.toLowerCase().includes(searchTerm)) ||
+          (enlace.creadoPor && enlace.creadoPor.toLowerCase().includes(searchTerm))
+        );
+      } else {
+        state.filteredData = [...state.data];
+      }
+
+      state.totalPages = Math.ceil(state.filteredData.length / state.pageSize) || 1;
+      renderTable('pendientes');
+    }
+
+    // ===== FUNCIONES DE RENDERIZADO DE TABLAS =====
+
+    function renderClientesTable(clientes) {
+      const tbody = document.getElementById('clientesBody');
+
+      if (clientes.length === 0) {
+        const hasSearch = tableState.clientes.searchTerm;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="${hasSearch ? 'no-results' : 'empty-state'}">
+              <i class="fas fa-${hasSearch ? 'search' : 'users'}"></i>
+              <p>${hasSearch ? 'No se encontraron clientes con ese criterio' : 'No hay clientes registrados'}</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = clientes.map(c => `
+        <tr>
+          <td><strong>${c.id}</strong></td>
+          <td>
+            <div style="font-weight: 600;">${c.name}</div>
+            <small class="text-muted">${c.email || 'Sin email'}</small>
+          </td>
+          <td><code>${c.rif}</code></td>
+          <td>${new Date(c.fechaCreacion).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}</td>
+          <td>
+            <span class="badge badge-success">Activo</span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderEnlacesTable(enlaces) {
+      const tbody = document.getElementById('enlacesBody');
+
+      if (enlaces.length === 0) {
+        const hasSearch = tableState.enlaces.searchTerm;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="${hasSearch ? 'no-results' : 'empty-state'}">
+              <i class="fas fa-${hasSearch ? 'search' : 'link'}"></i>
+              <p>${hasSearch ? 'No se encontraron enlaces con ese criterio' : 'No se han generado enlaces'}</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = enlaces.map(e => `
+        <tr>
+          <td>
+            <a href="${e.enlace || '#'}" target="_blank" class="link-preview">
+              <i class="fas fa-external-link-alt"></i>
+              <span>${(e.enlace || '').substring(0, 40)}...</span>
+            </a>
+          </td>
+          <td>${e.creadoPor || empleado.nombre || 'Sistema'}</td>
+          <td>${new Date(e.fecha).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}</td>
+          <td>
+            <span class="badge ${e.usado ? 'badge-success' : 'badge-warning'}">
+              ${e.usado ? 'Asignado' : 'Pendiente'}
+            </span>
+          </td>
+          <td>
+            <button class="copy-link" onclick="copyToClipboard('${e.enlace}')" title="Copiar enlace">
+              <i class="fas fa-copy"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPendientesTable(enlaces) {
+      const tbody = document.getElementById('pendientesBody');
+
+      if (enlaces.length === 0) {
+        const hasSearch = tableState.pendientes.searchTerm;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" class="${hasSearch ? 'no-results' : 'empty-state'}">
+              <i class="fas fa-${hasSearch ? 'search' : 'check-circle'}"></i>
+              <p>${hasSearch ? 'No se encontraron enlaces pendientes con ese criterio' : 'No hay enlaces pendientes'}</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = enlaces.map(e => {
+        let enlaceUrl = e.enlace;
+        if (!enlaceUrl) {
+          const baseUrl = window.location.origin;
+          const shortId = e.shortId || e.token?.substring(0, 8) || 'unknown';
+          enlaceUrl = `${baseUrl}/r/${shortId}`;
+        }
+
+        return `
+          <tr>
+            <td>
+              <div style="margin-bottom: 4px;">
+                <a href="${enlaceUrl}" target="_blank" class="link-preview">
+                  <i class="fas fa-external-link-alt"></i>
+                  ${enlaceUrl.substring(0, 50)}...
+                </a>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--gray);">
+                <strong>Token:</strong> ${e.token?.substring(0, 16)}...
+                ${e.shortId ? `<br><strong>Short ID:</strong> ${e.shortId}` : ''}
+                ${e.creadoPor ? `<br><strong>Creado por:</strong> ${e.creadoPor}` : ''}
+              </div>
+            </td>
+            <td>
+              ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'Fecha no disponible'}
+            </td>
+            <td>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${enlaceUrl}')" title="Copiar enlace">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="console.log(${JSON.stringify(e)})" title="Ver datos completos">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
 
     // ===== FUNCIONES PRINCIPALES =====
 
@@ -1132,7 +1929,8 @@
     }
 
     async function cargarClientes() {
-      const tbody = document.querySelector('#clientesTable tbody');
+      const tbody = document.getElementById('clientesBody');
+      const searchInput = document.getElementById('searchClientes');
 
       try {
         tbody.innerHTML = `
@@ -1152,38 +1950,20 @@
 
         const clientes = await res.json();
 
-        if (clientes.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" class="empty-state">
-                <i class="fas fa-users"></i>
-                <p>No hay clientes registrados</p>
-              </td>
-            </tr>
-          `;
-          return;
-        }
+        // Actualizar estado
+        tableState.clientes.data = clientes;
+        tableState.clientes.filteredData = [...clientes];
+        tableState.clientes.currentPage = 1;
+        tableState.clientes.totalPages = Math.ceil(clientes.length / tableState.clientes.pageSize) || 1;
 
-        tbody.innerHTML = clientes.map(c => `
-          <tr>
-            <td><strong>#${c.id}</strong></td>
-            <td>
-              <div style="font-weight: 600;">${c.name}</div>
-              <small class="text-muted">${c.email || 'Sin email'}</small>
-            </td>
-            <td><code>${c.rif}</code></td>
-            <td>${new Date(c.fechaCreacion).toLocaleDateString('es-ES', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</td>
-            <td>
-              <span class="badge badge-success">Activo</span>
-            </td>
-          </tr>
-        `).join('');
+        // Limpiar búsqueda
+        if (searchInput) searchInput.value = '';
+        tableState.clientes.searchTerm = '';
+
+        // Renderizar tabla
+        renderTable('clientes');
+
+        // Actualizar estadísticas
         document.getElementById('totalClientes').textContent = clientes.length;
 
       } catch (err) {
@@ -1201,7 +1981,8 @@
     }
 
     async function cargarEnlaces() {
-      const tbody = document.querySelector('#enlacesTable tbody');
+      const tbody = document.getElementById('enlacesBody');
+      const searchInput = document.getElementById('searchEnlaces');
 
       try {
         tbody.innerHTML = `
@@ -1221,49 +2002,25 @@
 
         const enlaces = await res.json();
 
-        if (enlaces.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" class="empty-state">
-                <i class="fas fa-link"></i>
-                <p>No se han generado enlaces</p>
-              </td>
-            </tr>
-          `;
-          return;
-        }
+        // Actualizar estado
+        tableState.enlaces.data = enlaces;
+        tableState.enlaces.filteredData = [...enlaces];
+        tableState.enlaces.currentPage = 1;
+        tableState.enlaces.totalPages = Math.ceil(enlaces.length / tableState.enlaces.pageSize) || 1;
 
-        tbody.innerHTML = enlaces.map(e => `
-          <tr>
-            <td>
-              <a href="${e.enlace || '#'}" target="_blank" class="link-preview">
-                <i class="fas fa-external-link-alt"></i>
-                <span>${(e.enlace || '').substring(0, 40)}...</span>
-              </a>
-            </td>
-            <td>${e.creadoPor || empleado.nombre || 'Sistema'}</td>
-            <td>${new Date(e.fecha).toLocaleDateString('es-ES', {
-              day: '2-digit',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</td>
-            <td>
-              <span class="badge ${e.usado ? 'badge-success' : 'badge-warning'}">
-                ${e.usado ? 'Asignado' : 'Pendiente'}
-              </span>
-            </td>
-            <td>
-              <button class="copy-link" onclick="copyToClipboard('${e.enlace}')" title="Copiar enlace">
-                <i class="fas fa-copy"></i>
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        // Limpiar búsqueda
+        if (searchInput) searchInput.value = '';
+        tableState.enlaces.searchTerm = '';
 
+        // Renderizar tabla
+        renderTable('enlaces');
+
+        // Actualizar estadísticas
         document.getElementById('totalEnlaces').textContent = enlaces.length;
         const pendientes = enlaces.filter(e => !e.usado).length;
         document.getElementById('enlacesPendientes').textContent = pendientes;
+
+        // Cargar pendientes
         verificarSinCliente();
 
       } catch (err) {
@@ -1281,7 +2038,8 @@
     }
 
     async function verificarSinCliente() {
-      const tbody = document.querySelector('#sinClienteTable tbody');
+      const tbody = document.getElementById('pendientesBody');
+      const searchInput = document.getElementById('searchPendientes');
 
       try {
         tbody.innerHTML = `
@@ -1305,67 +2063,18 @@
 
         const enlacesSinCliente = enlaces.filter(e => !e.usado);
 
-        if (enlacesSinCliente.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="3" class="empty-state">
-                <i class="fas fa-check-circle"></i>
-                <p>No hay enlaces pendientes</p>
-                <small>
-                  Total en el sistema: ${enlaces.length}<br>
-                  Enlaces usados: ${enlaces.filter(e => e.usado).length}
-                </small>
-              </td>
-            </tr>
-          `;
-          return;
-        }
+        // Actualizar estado
+        tableState.pendientes.data = enlacesSinCliente;
+        tableState.pendientes.filteredData = [...enlacesSinCliente];
+        tableState.pendientes.currentPage = 1;
+        tableState.pendientes.totalPages = Math.ceil(enlacesSinCliente.length / tableState.pendientes.pageSize) || 1;
 
-        tbody.innerHTML = enlacesSinCliente.map(e => {
-          let enlaceUrl = e.enlace;
-          if (!enlaceUrl) {
-            const baseUrl = window.location.origin;
-            const shortId = e.shortId || e.token?.substring(0, 8) || 'unknown';
-            enlaceUrl = `${baseUrl}/r/${shortId}`;
-          }
+        // Limpiar búsqueda
+        if (searchInput) searchInput.value = '';
+        tableState.pendientes.searchTerm = '';
 
-          return `
-            <tr>
-              <td>
-                <div style="margin-bottom: 4px;">
-                  <a href="${enlaceUrl}" target="_blank" class="link-preview">
-                    <i class="fas fa-external-link-alt"></i>
-                    ${enlaceUrl.substring(0, 50)}...
-                  </a>
-                </div>
-                <div style="font-size: 0.75rem; color: var(--gray);">
-                  <strong>Token:</strong> ${e.token?.substring(0, 16)}...
-                  ${e.shortId ? `<br><strong>Short ID:</strong> ${e.shortId}` : ''}
-                  ${e.creadoPor ? `<br><strong>Creado por:</strong> ${e.creadoPor}` : ''}
-                </div>
-              </td>
-              <td>
-                ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) : 'Fecha no disponible'}
-              </td>
-              <td>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${enlaceUrl}')" title="Copiar enlace">
-                    <i class="fas fa-copy"></i>
-                  </button>
-                  <button class="btn btn-warning btn-sm" onclick="console.log(${JSON.stringify(e)})" title="Ver datos completos">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join('');
+        // Renderizar tabla
+        renderTable('pendientes');
 
       } catch (err) {
         console.error('❌ Error en verificarSinCliente:', err);
@@ -1375,17 +2084,6 @@
               <i class="fas fa-exclamation-triangle"></i>
               <p>Error al verificar enlaces</p>
               <small><strong>${err.message}</strong></small>
-              <div style="text-align: left; margin-top: 1rem; font-size: 0.8rem;">
-                <p><strong>Posibles soluciones:</strong></p>
-                <ol style="text-align: left; padding-left: 1.5rem;">
-                  <li>Verifica que el backend esté corriendo</li>
-                  <li>Verifica que la ruta /api/admin/enlaces-generados exista</li>
-                  <li>Abre la consola (F12) para más detalles</li>
-                </ol>
-              </div>
-              <button class="btn btn-primary mt-2" onclick="verificarSinCliente()">
-                <i class="fas fa-redo"></i> Reintentar
-              </button>
             </td>
           </tr>
         `;
@@ -1507,6 +2205,276 @@
         localStorage.removeItem('facdin_token');
         window.location.href = '/login.html';
       });
+    }
+
+    // ===== FUNCIONES PARA EL DROPDOWN =====
+
+    function toggleDropdown() {
+      const dropdown = document.querySelector('.dropdown-menu');
+      dropdown.classList.toggle('show');
+    }
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.dropdown');
+      const dropdownMenu = document.querySelector('.dropdown-menu');
+      const dropdownToggle = document.querySelector('.dropdown-toggle');
+
+      if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+        if (!dropdown.contains(e.target) && !dropdownToggle.contains(e.target)) {
+          dropdownMenu.classList.remove('show');
+        }
+      }
+    });
+
+    // Asignar evento al botón dropdown
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropdownToggle = document.querySelector('.dropdown-toggle');
+      if (dropdownToggle) {
+        dropdownToggle.addEventListener('click', toggleDropdown);
+      }
+    });
+
+    // ===== FUNCIONES DE LIMPIEZA =====
+
+    function esAdministrador() {
+      // Verificar si el usuario es administrador
+      const empleado = getEmpleadoFromToken();
+      return empleado && (empleado.rol === 'admin' || empleado.rol === 'administrador');
+    }
+
+    function configurarCheckboxes() {
+      // Configurar el checkbox para limpieza de no usados
+      const checkboxNoUsados = document.getElementById('confirmarEliminacion');
+      const checkboxExpirados = document.getElementById('confirmarEliminacionExpirados');
+      
+      if (checkboxNoUsados) {
+        checkboxNoUsados.addEventListener('change', function() {
+          const btn = document.getElementById('btnConfirmarLimpiezaNoUsados');
+          btn.disabled = !this.checked;
+        });
+      }
+      
+      if (checkboxExpirados) {
+        checkboxExpirados.addEventListener('change', function() {
+          const btn = document.getElementById('btnConfirmarLimpiezaExpirados');
+          btn.disabled = !this.checked;
+        });
+      }
+    }
+
+    // Función para confirmar eliminación de enlaces expirados
+    async function confirmarLimpiezaExpirados() {
+      // Verificar permisos
+      if (!esAdministrador()) {
+        showError('Acceso denegado', 'Solo los administradores pueden ejecutar esta acción');
+        return;
+      }
+
+      try {
+        // Obtener estadísticas de expirados
+        const response = await fetch('/api/admin/estadisticas-expirados', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.totalExpirados === 0) {
+            showInfo('Sin enlaces expirados', 'No hay enlaces con más de 24 horas para eliminar.');
+            return;
+          }
+
+          // Actualizar el modal con la información
+          document.getElementById('expiradosCount').textContent = data.enlacesExpirados || 0;
+          document.getElementById('shortlinksExpiradosCount').textContent = data.shortlinksExpirados || 0;
+          document.getElementById('totalExpirados').textContent = data.totalExpirados || 0;
+
+          // Resetear checkbox
+          const checkbox = document.getElementById('confirmarEliminacionExpirados');
+          if (checkbox) checkbox.checked = false;
+          
+          const btn = document.getElementById('btnConfirmarLimpiezaExpirados');
+          if (btn) btn.disabled = true;
+
+          showModal('limpiezaExpiradosModal');
+        } else {
+          showError('Error', 'No se pudieron cargar las estadísticas de enlaces expirados');
+        }
+      } catch (error) {
+        console.error('Error obteniendo estadísticas de expirados:', error);
+        showError('Error de conexión', 'No se pudo conectar con el servidor');
+      }
+    }
+
+    // Función para obtener estadísticas de enlaces no usados
+    async function obtenerEstadisticasNoUsados() {
+      try {
+        const response = await fetch('/api/admin/estadisticas-no-usados', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Actualizar el modal con la información
+          document.getElementById('noUsadosCount').textContent = data.enlacesNoUsados || 0;
+          document.getElementById('shortlinksNoUsadosCount').textContent = data.shortlinksNoUsados || 0;
+          document.getElementById('totalNoUsados').textContent = data.totalNoUsados || 0;
+
+          return data;
+        }
+      } catch (error) {
+        console.error('Error obteniendo estadísticas:', error);
+      }
+      return { enlacesNoUsados: 0, shortlinksNoUsados: 0, totalNoUsados: 0 };
+    }
+
+    // Función para confirmar eliminación de enlaces no usados
+    async function confirmarLimpiezaNoUsados() {
+      // Verificar permisos
+      if (!esAdministrador()) {
+        showError('Acceso denegado', 'Solo los administradores pueden ejecutar esta acción');
+        return;
+      }
+
+      // Obtener estadísticas primero
+      obtenerEstadisticasNoUsados().then(data => {
+        if (data.totalNoUsados === 0) {
+          showInfo('Sin enlaces no usados', 'No hay enlaces con used=false para eliminar.');
+          return;
+        }
+
+        // Resetear checkbox
+        const checkbox = document.getElementById('confirmarEliminacion');
+        if (checkbox) checkbox.checked = false;
+        
+        const btn = document.getElementById('btnConfirmarLimpiezaNoUsados');
+        if (btn) btn.disabled = true;
+
+        showModal('limpiezaNoUsadosModal');
+      }).catch(error => {
+        console.error('Error obteniendo estadísticas:', error);
+        showError('Error', 'No se pudieron cargar las estadísticas');
+      });
+    }
+
+    // Función para ejecutar la limpieza de enlaces no usados
+    async function ejecutarLimpiezaNoUsados() {
+      const btn = document.getElementById('btnConfirmarLimpiezaNoUsados');
+      const originalText = btn.innerHTML;
+      const dropdownToggle = document.querySelector('.dropdown-toggle');
+
+      try {
+        // Mostrar estado de carga
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+        btn.disabled = true;
+        dropdownToggle.disabled = true;
+
+        // Llamar al endpoint de limpieza
+        const response = await fetch('/api/admin/limpiar-no-usados', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok) {
+          showSuccess('Limpieza completada',
+            `Se eliminaron ${resultado.enlacesEliminados || 0} enlaces no usados y ${resultado.shortlinksEliminados || 0} shortlinks no usados.`);
+
+          // Actualizar las tablas
+          setTimeout(() => {
+            cargarEnlaces();
+            cargarEstadisticas();
+            verificarSinCliente();
+          }, 1000);
+
+        } else {
+          showError('Error en limpieza', resultado.error || 'No se pudo completar la limpieza');
+        }
+
+      } catch (error) {
+        console.error('Error en limpieza:', error);
+        showError('Error de conexión', 'No se pudo conectar con el servidor');
+
+      } finally {
+        // Restaurar botón
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        dropdownToggle.disabled = false;
+        closeModal('limpiezaNoUsadosModal');
+
+        // Cerrar dropdown
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        if (dropdownMenu) {
+          dropdownMenu.classList.remove('show');
+        }
+      }
+    }
+
+    // Función para ejecutar la limpieza de enlaces expirados
+    async function ejecutarLimpiezaExpirados() {
+      const btn = document.getElementById('btnConfirmarLimpiezaExpirados');
+      const originalText = btn.innerHTML;
+      const dropdownToggle = document.querySelector('.dropdown-toggle');
+
+      try {
+        // Mostrar estado de carga
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+        btn.disabled = true;
+        dropdownToggle.disabled = true;
+
+        // Llamar al endpoint de limpieza
+        const response = await fetch('/api/admin/limpiar-expirados', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok) {
+          showSuccess('Limpieza completada',
+            `Se eliminaron ${resultado.enlacesEliminados || 0} enlaces expirados y ${resultado.shortlinksEliminados || 0} shortlinks expirados.`);
+
+          // Actualizar las tablas
+          setTimeout(() => {
+            cargarEnlaces();
+            cargarEstadisticas();
+            verificarSinCliente();
+          }, 1000);
+
+        } else {
+          showError('Error en limpieza', resultado.error || 'No se pudo completar la limpieza');
+        }
+
+      } catch (error) {
+        console.error('Error en limpieza:', error);
+        showError('Error de conexión', 'No se pudo conectar con el servidor');
+
+      } finally {
+        // Restaurar botón
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        dropdownToggle.disabled = false;
+        closeModal('limpiezaExpiradosModal');
+
+        // Cerrar dropdown
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        if (dropdownMenu) {
+          dropdownMenu.classList.remove('show');
+        }
+      }
     }
 
     // Actualizar datos cada 30 segundos

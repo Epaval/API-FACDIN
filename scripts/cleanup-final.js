@@ -1,16 +1,50 @@
-// scripts/cleanup-final.js - VERSIÓN CORREGIDA CON fechaCreacion
+// scripts/cleanup-with-logs.js
 require('dotenv').config({ path: '.env' });
 
 const { Sequelize } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
 
-console.log('🧹 Limpieza de enlaces expirados FACDIN');
-console.log('=======================================\n');
+// Configuración de logs
+const LOG_DIR = path.join(__dirname, '../logs/cleanup');
+const LOG_FILE = path.join(LOG_DIR, `cleanup-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+
+// Crear directorio de logs
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+}
+
+function log(message, type = 'info') {
+  const timestamp = new Date().toLocaleString('es-ES');
+  const typeSymbol = {
+    info: '📝',
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    debug: '🔍'
+  }[type] || '📝';
+  
+  const logMessage = `[${timestamp}] ${typeSymbol} ${message}`;
+  
+  // Mostrar en consola
+  console.log(logMessage);
+  
+  // Guardar en archivo
+  fs.appendFileSync(LOG_FILE, logMessage + '\n', 'utf8');
+  
+  // También guardar en log general
+  const generalLog = path.join(LOG_DIR, 'cleanup-history.log');
+  fs.appendFileSync(generalLog, logMessage + '\n', 'utf8');
+}
 
 async function main() {
+  log('🧹 INICIANDO LIMPIEZA DE ENLACES EXPIRADOS', 'info');
+  log(`📁 Archivo de log: ${LOG_FILE}`, 'debug');
+  
   let sequelize;
   
   try {
-    // 1. Configurar conexión
+    // Configurar conexión
     sequelize = new Sequelize(
       process.env.DB_NAME,
       process.env.DB_USER,
@@ -19,18 +53,18 @@ async function main() {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: 'postgres',
-        logging: false
+        logging: (sql) => log(`SQL: ${sql}`, 'debug')
       }
     );
     
     await sequelize.authenticate();
-    console.log('✅ Conectado a PostgreSQL');
+    log('✅ Conectado a PostgreSQL', 'success');
     
-    // 2. Calcular fecha límite (24 horas atrás)
+    // Calcular fecha límite
     const fechaLimite = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    console.log(`📅 Eliminando enlaces anteriores a: ${fechaLimite.toLocaleString()}`);
+    log(`📅 Eliminando enlaces anteriores a: ${fechaLimite.toLocaleString()}`, 'info');
     
-    // 3. Contar enlaces a eliminar - USANDO fechaCreacion
+    // Contar enlaces a eliminar
     const [conteo] = await sequelize.query(
       `SELECT COUNT(*) as total FROM registration_links 
        WHERE "fechaCreacion" < $1 AND used = false`,
@@ -38,47 +72,27 @@ async function main() {
     );
     
     const totalEliminar = parseInt(conteo[0].total) || 0;
-    console.log(`📊 Enlaces a eliminar: ${totalEliminar}`);
+    log(`📊 Enlaces a eliminar: ${totalEliminar}`, 'info');
     
     if (totalEliminar === 0) {
-      console.log('✅ No hay enlaces expirados para eliminar');
+      log('✅ No hay enlaces expirados para eliminar', 'success');
       await sequelize.close();
+      log('🏁 LIMPIEZA COMPLETADA - NADA QUE HACER', 'success');
       return;
     }
     
-    // 4. Preguntar confirmación (a menos que sea --force)
-    if (!process.argv.includes('--force') && !process.argv.includes('-f')) {
-      const readline = require('readline').createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-      
-      readline.question(`\n¿Eliminar ${totalEliminar} enlaces expirados? (s/n): `, async (respuesta) => {
-        if (respuesta.toLowerCase() === 's') {
-          await eliminarEnlaces(sequelize, fechaLimite);
-        } else {
-          console.log('❌ Limpieza cancelada');
-        }
-        readline.close();
-        await sequelize.close();
-      });
-    } else {
-      console.log(`\n🔨 Forzando eliminación de ${totalEliminar} enlaces...`);
-      await eliminarEnlaces(sequelize, fechaLimite);
-      await sequelize.close();
-    }
+    // Ejecutar eliminación
+    const resultado = await eliminarEnlaces(sequelize, fechaLimite);
+    
+    // Guardar reporte detallado
+    guardarReporte(resultado, fechaLimite);
+    
+    await sequelize.close();
+    log('🏁 LIMPIEZA COMPLETADA EXITOSAMENTE', 'success');
     
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
-    
-    // Error específico de columna
-    if (error.message.includes('column') && error.message.includes('does not exist')) {
-      console.log('\n💡 El error indica que la columna no existe.');
-      console.log('   Probando con diferentes nombres de columna...');
-      
-      // Intentar con diferentes nombres
-      await intentarConDiferentesNombres();
-    }
+    log(`❌ Error: ${error.message}`, 'error');
+    log(`Stack: ${error.stack}`, 'debug');
     
     if (sequelize) await sequelize.close();
     process.exit(1);
@@ -89,125 +103,134 @@ async function eliminarEnlaces(sequelize, fechaLimite) {
   const transaction = await sequelize.transaction();
   
   try {
-    console.log('\n🔍 Buscando enlaces expirados...');
+    log('🔍 Buscando enlaces expirados...', 'info');
     
-    // Obtener tokens de enlaces expirados - USANDO "fechaCreacion" entre comillas
-    const [tokensExpirados] = await sequelize.query(
-      `SELECT token FROM registration_links 
-       WHERE "fechaCreacion" < $1 AND used = false`,
+    // 1. Obtener enlaces antes de eliminar (para el log)
+    const [enlacesExpirados] = await sequelize.query(
+      `SELECT id, token, "createdBy", "fechaCreacion" 
+       FROM registration_links 
+       WHERE "fechaCreacion" < $1 AND used = false
+       ORDER BY "fechaCreacion"`,
       { bind: [fechaLimite], transaction }
     );
     
-    const tokens = tokensExpirados.map(t => t.token);
-    console.log(`📋 Encontrados ${tokens.length} enlaces expirados`);
+    log(`📋 Encontrados ${enlacesExpirados.length} enlaces expirados`, 'info');
     
-    if (tokens.length === 0) {
+    if (enlacesExpirados.length === 0) {
       await transaction.commit();
-      console.log('✅ Nada que eliminar');
-      return;
+      return { eliminados: 0, detalles: [] };
     }
     
-    // Eliminar de short_links
-    console.log('🗑️  Eliminando short_links relacionados...');
+    // 2. Guardar detalles para el log
+    const tokens = enlacesExpirados.map(t => t.token);
+    const detalles = enlacesExpirados.map(e => ({
+      id: e.id,
+      token: e.token,
+      creadoPor: e.createdBy,
+      fecha: e.fechaCreacion
+    }));
+    
+    // 3. Eliminar short_links
+    log('🗑️  Eliminando short_links relacionados...', 'info');
     const [shortResult] = await sequelize.query(
-      `DELETE FROM short_links WHERE token = ANY($1)`,
+      `DELETE FROM short_links WHERE token = ANY($1) RETURNING id, token`,
       { bind: [tokens], transaction }
     );
     
-    console.log(`🗑️  Eliminados ${shortResult} short_links`);
+    log(`🗑️  Eliminados ${shortResult.length} short_links`, 'success');
     
-    // Eliminar de registration_links - USANDO "fechaCreacion"
-    console.log('🗑️  Eliminando registration_links...');
-    const [resultado] = await sequelize.query(
-      `DELETE FROM registration_links 
-       WHERE "fechaCreacion" < $1 AND used = false
-       RETURNING id, token, "createdBy", "fechaCreacion"`,
-      { bind: [fechaLimite], transaction }
+    // 4. Eliminar registration_links
+    log('🗑️  Eliminando registration_links...', 'info');
+    const [regResult] = await sequelize.query(
+      `DELETE FROM registration_links WHERE token = ANY($1) RETURNING id, token`,
+      { bind: [tokens], transaction }
     );
     
     await transaction.commit();
     
-    console.log('\n🎉 LIMPIEZA COMPLETADA EXITOSAMENTE');
-    console.log('==================================');
-    console.log(`📊 Total eliminados: ${resultado.length}`);
+    log(`✅ Eliminados ${regResult.length} registration_links`, 'success');
     
-    if (resultado.length > 0) {
-      console.log('\n📋 Muestra de enlaces eliminados:');
-      resultado.slice(0, 3).forEach((item, i) => {
-        const fecha = new Date(item.fechaCreacion).toLocaleString();
-        console.log(`\n  ${i + 1}. Token: ${item.token.substring(0, 20)}...`);
-        console.log(`     Fecha: ${fecha}`);
-        console.log(`     Creado por: ${item.createdBy || 'Sistema'}`);
-      });
-      
-      if (resultado.length > 3) {
-        console.log(`\n  ... y ${resultado.length - 3} más`);
-      }
-    }
-    
-    // Mostrar estadísticas finales
-    await mostrarEstadisticas(sequelize);
+    return {
+      eliminados: regResult.length,
+      shortLinksEliminados: shortResult.length,
+      detalles: detalles,
+      fechaLimpieza: new Date(),
+      fechaLimite: fechaLimite
+    };
     
   } catch (error) {
     await transaction.rollback();
-    console.error('❌ Error durante la eliminación:', error.message);
     throw error;
   }
 }
 
-async function mostrarEstadisticas(sequelize) {
-  try {
-    const [stats] = await sequelize.query(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN used = true THEN 1 ELSE 0 END) as usados,
-        SUM(CASE WHEN used = false THEN 1 ELSE 0 END) as no_usados,
-        MIN("fechaCreacion") as mas_antiguo,
-        MAX("fechaCreacion") as mas_reciente
-      FROM registration_links;
-    `);
-    
-    console.log('\n📈 ESTADÍSTICAS ACTUALES:');
-    console.log('========================');
-    console.log(`  Total enlaces: ${stats[0].total || 0}`);
-    console.log(`  Enlaces usados: ${stats[0].usados || 0}`);
-    console.log(`  Enlaces disponibles: ${stats[0].no_usados || 0}`);
-    
-    if (stats[0].mas_antiguo) {
-      const antiguo = new Date(stats[0].mas_antiguo).toLocaleString();
-      console.log(`  Enlace más antiguo: ${antiguo}`);
-    }
-    
-    if (stats[0].mas_reciente) {
-      const reciente = new Date(stats[0].mas_reciente).toLocaleString();
-      console.log(`  Enlace más reciente: ${reciente}`);
-    }
-    
-  } catch (error) {
-    console.log('⚠️  No se pudieron obtener estadísticas:', error.message);
+function guardarReporte(resultado, fechaLimite) {
+  const reportDir = path.join(__dirname, '../logs/reports');
+  if (!fs.existsSync(reportDir)) {
+    fs.mkdirSync(reportDir, { recursive: true });
   }
+  
+  const reportFile = path.join(reportDir, `reporte-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+  
+  const reporte = {
+    metadata: {
+      fechaLimpieza: new Date().toISOString(),
+      fechaLimite: fechaLimite.toISOString(),
+      sistema: 'FACDIN Cleanup',
+      version: '1.0.0'
+    },
+    resumen: {
+      totalEliminados: resultado.eliminados,
+      shortLinksEliminados: resultado.shortLinksEliminados,
+      duracionEstimada: 'Menos de 1 minuto'
+    },
+    detalles: resultado.detalles,
+    estadisticas: {
+      porUsuario: resultado.detalles.reduce((acc, item) => {
+        acc[item.creadoPor] = (acc[item.creadoPor] || 0) + 1;
+        return acc;
+      }, {})
+    }
+  };
+  
+  fs.writeFileSync(reportFile, JSON.stringify(reporte, null, 2), 'utf8');
+  log(`📄 Reporte guardado en: ${reportFile}`, 'success');
+  
+  // También guardar resumen en CSV
+  guardarResumenCSV(resultado, fechaLimite);
 }
 
-async function intentarConDiferentesNombres() {
-  console.log('\n🔍 Probando diferentes nombres de columna...');
-  
-  const posiblesNombres = [
-    'fechaCreacion',
-    'fecha_creacion', 
-    'created_at',
-    'createdAt',
-    'fecha',
-    'created'
-  ];
-  
-  for (const nombre of posiblesNombres) {
-    console.log(`  Probando: "${nombre}"`);
-    // Aquí podrías implementar lógica para probar cada nombre
+function guardarResumenCSV(resultado, fechaLimite) {
+  const csvDir = path.join(__dirname, '../logs/csv');
+  if (!fs.existsSync(csvDir)) {
+    fs.mkdirSync(csvDir, { recursive: true });
   }
   
-  console.log('\n💡 Para ver las columnas exactas, ejecuta:');
-  console.log('   sudo -u postgres psql -p 5433 -d facdin_db -c "\\d registration_links"');
+  const csvFile = path.join(csvDir, `resumen-${new Date().toISOString().split('T')[0]}.csv`);
+  
+  let csvContent = 'ID,Token,CreadoPor,Fecha,Estado\n';
+  
+  resultado.detalles.forEach(item => {
+    const fecha = new Date(item.fecha).toLocaleString('es-ES');
+    csvContent += `${item.id},"${item.token}","${item.creadoPor}","${fecha}",ELIMINADO\n`;
+  });
+  
+  // Agregar resumen al final
+  csvContent += `\nRESUMEN,,,,\n`;
+  csvContent += `Total eliminados,${resultado.eliminados},,,\n`;
+  csvContent += `Fecha límite,"${fechaLimite.toLocaleString('es-ES')}",,,\n`;
+  csvContent += `Fecha limpieza,"${new Date().toLocaleString('es-ES')}",,,\n`;
+  
+  fs.writeFileSync(csvFile, csvContent, 'utf8');
+  log(`📊 Resumen CSV guardado en: ${csvFile}`, 'success');
 }
 
 // Ejecutar
-main();
+const forceMode = process.argv.includes('--force') || process.argv.includes('-f');
+if (forceMode) {
+  log('🔨 MODO FORZADO ACTIVADO', 'warning');
+  main();
+} else {
+  log('❌ Ejecuta con --force para confirmar', 'error');
+  process.exit(1);
+}

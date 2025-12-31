@@ -3,97 +3,364 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login FACDIN-API</title>
+  <title>Login — FACDIN-API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Reset básico */
+    /* ===== VARIABLES ===== */
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4895ef;
+      --primary-dark: #3a0ca3;
+      --secondary: #7209b7;
+      --danger: #f72585;
+      --success: #4cc9f0;
+      --warning: #f8961e;
+      --gray-50: #f8f9fa;
+      --gray-100: #f1f3f5;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-500: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+      --white: #ffffff;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+      --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-dark: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-900) 100%);
+    }
+
+    /* ===== RESET Y BASE ===== */
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
 
-    body { 
-      font-family: 'Segoe UI', Arial, sans-serif; 
-      background: #f5f5f5; 
-      color: #333; 
-      line-height: 1.6;
-      margin: 0;
-      padding: 50px;
+    html {
+      font-size: 16px;
     }
 
-    .container { 
-      max-width: 420px; 
-      margin: 0 auto; 
-      padding: 30px; 
-      background: white; 
-      border-radius: 12px; 
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #007bff;
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gradient-dark);
+      color: var(--white);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      line-height: 1.6;
+      padding: 1rem;
+      position: relative;
+      overflow-x: hidden;
     }
 
-    input { 
-      padding: 14px; 
-      width: 100%; 
-      font-size: 16px; 
-      border: 1px solid #ddd;
-      border-radius: 8px; 
-      margin: 12px 0;
-      transition: border-color 0.3s;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-    }
-
-    button { 
-      background: #007bff; 
-      color: white; 
-      border: none; 
-      padding: 14px; 
-      font-size: 16px; 
-      border-radius: 8px; 
-      cursor: pointer; 
-      width: 100%; 
-      font-weight: 600;
-      transition: background 0.3s;
-      margin-top: 10px;
-    }
-
-    button:hover:not(:disabled) { 
-      background: #0056b3; 
-    }
-
-    button:disabled { 
-      background: #ccc; 
-      cursor: not-allowed;
-    }
-
-    /* Modal Overlay */
-    .modal-overlay {
+    /* ===== BACKGROUND ANIMATION ===== */
+    .bg-animation {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .bg-animation::before,
+    .bg-animation::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(67, 97, 238, 0.1);
+      animation: float 20s infinite linear;
+    }
+
+    .bg-animation::before {
+      width: 400px;
+      height: 400px;
+      top: -200px;
+      right: -100px;
+      animation-delay: 0s;
+    }
+
+    .bg-animation::after {
+      width: 300px;
+      height: 300px;
+      bottom: -150px;
+      left: -100px;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      33% {
+        transform: translate(30px, -50px) rotate(120deg);
+      }
+      66% {
+        transform: translate(-20px, 20px) rotate(240deg);
+      }
+    }
+
+    /* ===== CONTENEDOR PRINCIPAL ===== */
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== HEADER ===== */
+    .login-header {
+      padding: 2.5rem 2rem 1.5rem;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 16px rgba(67, 97, 238, 0.3);
+    }
+
+    .logo-text {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--white), var(--gray-300));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .login-header h2 {
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--gray-300);
+      margin-top: 0.5rem;
+    }
+
+    /* ===== FORMULARIO ===== */
+    .login-form {
+      padding: 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .input-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--gray-300);
+    }
+
+    .input-label i {
+      font-size: 0.9rem;
+      color: var(--primary-light);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      font-size: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--white);
+      transition: var(--transition);
+      font-weight: 400;
+    }
+
+    .login-form input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .login-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      transition: var(--transition);
+      pointer-events: none;
+    }
+
+    .login-form input:focus + .input-icon {
+      color: var(--primary);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .password-toggle:hover {
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ===== BOTÓN ===== */
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--gradient-primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn:disabled::before {
+      display: none;
+    }
+
+    .btn i {
+      font-size: 1.1rem;
+    }
+
+    /* ===== FOOTER ===== */
+    .login-footer {
+      padding: 1.5rem 2rem;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.875rem;
+      color: var(--gray-400);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .login-footer a {
+      color: var(--primary-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .login-footer a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      transition: var(--transition);
+      padding: 1rem;
     }
 
     .modal-overlay.active {
@@ -101,135 +368,414 @@
       visibility: visible;
     }
 
-    /* Modal */
     .modal {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      transform: translateY(-20px);
-      transition: transform 0.3s ease;
+      background: var(--gradient-dark);
+      padding: 2.5rem 2rem;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-xl);
+      transform: translateY(30px) scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       text-align: center;
     }
 
     .modal-overlay.active .modal {
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
 
-    .modal h3 {
-      margin-bottom: 12px;
+    .modal-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      font-size: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 3px solid;
     }
 
-    .modal.error h3 {
-      color: #dc3545;
+    .modal.success .modal-icon {
+      color: var(--success);
+      border-color: var(--success);
+      background: rgba(76, 201, 240, 0.1);
     }
 
-    .modal.success h3 {
-      color: #28a745;
+    .modal.error .modal-icon {
+      color: var(--danger);
+      border-color: var(--danger);
+      background: rgba(247, 37, 133, 0.1);
+    }
+
+    .modal.warning .modal-icon {
+      color: var(--warning);
+      border-color: var(--warning);
+      background: rgba(248, 150, 30, 0.1);
+    }
+
+    .modal h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--white);
     }
 
     .modal p {
-      color: #555;
-      margin-bottom: 20px;
-      font-size: 15px;
+      color: var(--gray-300);
+      margin-bottom: 2rem;
+      line-height: 1.5;
     }
 
-    .modal button {
-      width: auto;
-      padding: 10px 20px;
-      background: #007bff;
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
     }
 
-    .modal button:hover {
-      background: #0056b3;
+    .modal-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      min-width: 120px;
+    }
+
+    .modal-btn-primary {
+      background: var(--gradient-primary);
+      color: var(--white);
+    }
+
+    .modal-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+    }
+
+    .modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ===== LOADER ===== */
+    .loader {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--white);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .login-container {
+        max-width: 100%;
+      }
+      
+      .login-header {
+        padding: 2rem 1.5rem 1.25rem;
+      }
+      
+      .logo-text {
+        font-size: 1.5rem;
+      }
+      
+      .login-form {
+        padding: 1.5rem;
+      }
+      
+      .modal {
+        padding: 2rem 1.5rem;
+      }
+      
+      .modal-buttons {
+        flex-direction: column;
+      }
+      
+      .modal-btn {
+        width: 100%;
+        min-width: auto;
+      }
+    }
+
+    /* ===== DARK/LIGHT MODE SUPPORT ===== */
+    @media (prefers-color-scheme: light) {
+      body {
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+        color: var(--gray-900);
+      }
+      
+      .login-container {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--gray-200);
+      }
+      
+      .login-form input {
+        background: var(--white);
+        color: var(--gray-900);
+        border-color: var(--gray-300);
+      }
+      
+      .login-form input::placeholder {
+        color: var(--gray-500);
+      }
+      
+      .login-form input:focus {
+        background: var(--white);
+      }
+      
+      .input-label {
+        color: var(--gray-700);
+      }
+      
+      .input-icon {
+        color: var(--gray-500);
+      }
+      
+      .password-toggle {
+        color: var(--gray-500);
+      }
+      
+      .password-toggle:hover {
+        color: var(--gray-800);
+        background: var(--gray-200);
+      }
+      
+      .login-footer {
+        color: var(--gray-600);
+        background: var(--gray-50);
+      }
+      
+      .modal {
+        background: var(--white);
+        border: 1px solid var(--gray-200);
+      }
+      
+      .modal h3 {
+        color: var(--gray-900);
+      }
+      
+      .modal p {
+        color: var(--gray-700);
+      }
     }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <h2>🔐 Iniciar Sesión</h2>
+  <!-- Background Animation -->
+  <div class="bg-animation"></div>
+  
+  <!-- Main Container -->
+  <div class="login-container">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="logo-text">FACDIN</div>
+      </div>
+      <h2>Panel de Administración Segura</h2>
+    </div>
     
-    <input 
-      type="email" 
-      id="email" 
-      placeholder="Correo electrónico" 
-      autocomplete="username" 
-      required 
-    />
+    <!-- Form -->
+    <form class="login-form" onsubmit="login(event)">
+      <div class="input-group">
+        <label class="input-label">
+          <i class="fas fa-envelope"></i>
+          Correo electrónico
+        </label>
+        <div class="input-wrapper">
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="ejemplo@facdin.com"
+            autocomplete="username"
+            required
+          />
+          <div class="input-icon">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label class="input-label">
+          <i class="fas fa-lock"></i>
+          Contraseña
+        </label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+            required
+          />
+          <div class="input-icon">
+            <i class="fas fa-key"></i>
+          </div>
+          <button type="button" class="password-toggle" id="togglePassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      
+      <button type="submit" class="btn" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Iniciar Sesión</span>
+      </button>
+    </form>
     
-    <input 
-      type="password" 
-      id="password" 
-      placeholder="Contraseña" 
-      autocomplete="current-password" 
-      required 
-    />
-    
-    <button onclick="login()" id="btn">Iniciar Sesión</button>
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>¿Problemas para acceder? <a href="#">Contactar soporte</a></p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem;">© 2025 FACDIN-API v1.0.0</p>
+    </div>
   </div>
-
-  <!-- Modal de Notificación -->
+  
+  <!-- Modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modal">
-      <h3 id="modalTitle"></h3>
-      <p id="modalMessage"></p>
-      <button onclick="cerrarModal()">Aceptar</button>
+      <div class="modal-icon" id="modalIcon">
+        <i class="fas fa-check"></i>
+      </div>
+      <h3 id="modalTitle">Título del Modal</h3>
+      <p id="modalMessage">Mensaje del modal aquí.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-primary" id="modalActionBtn">Aceptar</button>
+        <button class="modal-btn modal-btn-secondary" id="modalCancelBtn" style="display: none;">Cancelar</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // Referencias al DOM
+    // Elementos del DOM
     const modalOverlay = document.getElementById('modalOverlay');
     const modal = document.getElementById('modal');
+    const modalIcon = document.getElementById('modalIcon');
     const modalTitle = document.getElementById('modalTitle');
     const modalMessage = document.getElementById('modalMessage');
+    const modalActionBtn = document.getElementById('modalActionBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
 
-    function abrirModal(tipo, titulo, mensaje) {
-      modal.className = 'modal ' + tipo; // 'error' o 'success'
-      modalTitle.textContent = titulo;
-      modalMessage.textContent = mensaje;
-      modalOverlay.classList.add('active');
-    }
-
-    function cerrarModal() {
-      modalOverlay.classList.remove('active');
-    }
-
-    // Cerrar con clic fuera
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) {
-        cerrarModal();
-      }
+    // Toggle password visibility
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
     });
 
-    // Cerrar con tecla Escape
+    // Sistema de modales
+    function showModal(type = 'success', title, message, actionText = 'Aceptar', onAction = null, showCancel = false) {
+      // Configurar tipo de modal
+      modal.className = `modal ${type}`;
+      
+      // Configurar icono según tipo
+      const iconMap = {
+        success: { icon: 'fa-check', color: '#4cc9f0' },
+        error: { icon: 'fa-times', color: '#f72585' },
+        warning: { icon: 'fa-exclamation', color: '#f8961e' },
+        info: { icon: 'fa-info', color: '#4361ee' }
+      };
+      
+      const iconConfig = iconMap[type] || iconMap.info;
+      modalIcon.innerHTML = `<i class="fas ${iconConfig.icon}"></i>`;
+      modalIcon.style.borderColor = iconConfig.color;
+      modalIcon.querySelector('i').style.color = iconConfig.color;
+      
+      // Configurar contenido
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+      modalActionBtn.textContent = actionText;
+      
+      // Configurar botón de acción
+      if (onAction) {
+        modalActionBtn.onclick = () => {
+          onAction();
+          closeModal();
+        };
+      } else {
+        modalActionBtn.onclick = closeModal;
+      }
+      
+      // Mostrar/ocultar botón cancelar
+      modalCancelBtn.style.display = showCancel ? 'block' : 'none';
+      
+      // Mostrar modal
+      modalOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      // Resetear handlers
+      modalActionBtn.onclick = closeModal;
+    }
+
+    // Cerrar modal con tecla Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-        cerrarModal();
+        closeModal();
       }
     });
 
+    // Cerrar modal al hacer clic fuera
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeModal();
+      }
+    });
+
+    // Validación de email
+    function isValidEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
     // Función de login
-    async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('btn');
+    async function login(e) {
+      e.preventDefault();
       
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      
+      // Validación básica
       if (!email || !password) {
-        abrirModal('error', '⚠️ Datos incompletos', 'Por favor, ingresa tu correo y contraseña.');
+        showModal('warning', '⚠️ Datos incompletos', 'Por favor, completa todos los campos requeridos.');
         return;
       }
-
+      
+      if (!isValidEmail(email)) {
+        showModal('warning', '📧 Email inválido', 'Por favor, ingresa un correo electrónico válido.');
+        return;
+      }
+      
+      // Mostrar estado de carga
       btn.disabled = true;
-      btn.textContent = 'Iniciando...';
-
+      btn.innerHTML = '<div class="loader"></div><span>Verificando credenciales...</span>';
+      
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -241,22 +787,44 @@
 
         if (res.ok && data.token) {
           localStorage.setItem('facdin_token', data.token);
-          abrirModal('success', '✅ Autenticación exitosa', 'Redirigiendo al panel...', cerrarModal);
+          
+          showModal('success', '✅ ¡Bienvenido!', 'Credenciales verificadas correctamente. Redirigiendo...');
+          
+          // Redirigir después de 1.5 segundos
           setTimeout(() => {
             window.location.href = '/dashboard.html';
-          }, 1000);
+          }, 1500);
         } else {
-          abrirModal('error', '❌ Error', data.error || 'Credenciales inválidas');
+          showModal('error', '❌ Acceso denegado', data.error || 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.');
         }
       } catch (err) {
-        console.error('Error al conectar con el servidor:', err);
-        abrirModal('error', '🌐 Conexión fallida', 'No se pudo conectar al servidor. Verifica tu conexión e inténtalo más tarde.');
+        console.error('Error de red:', err);
+        showModal('error', '🌐 Error de conexión', 'No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta nuevamente.');
       } finally {
+        // Restaurar botón
         btn.disabled = false;
-        btn.textContent = 'Iniciar Sesión';
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>Iniciar Sesión</span>';
       }
     }
-  </script>
 
+    // Autofocus en el campo de email
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('email').focus();
+    });
+
+    // Validación en tiempo real
+    document.getElementById('email').addEventListener('blur', function() {
+      if (this.value && !isValidEmail(this.value)) {
+        this.style.borderColor = 'var(--danger)';
+      } else {
+        this.style.borderColor = '';
+      }
+    });
+
+    // Limpiar validación al escribir
+    document.getElementById('email').addEventListener('input', function() {
+      this.style.borderColor = '';
+    });
+  </script>
 </body>
-</html>
+</html> 

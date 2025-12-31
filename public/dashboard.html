@@ -7,7 +7,7 @@
   <title>🔐 Panel Administrativo FACDIN</title>
 
   <!-- Font Awesome para íconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- ⚠️ Protección temprana: bloquear acceso antes de cargar cualquier contenido -->
   <script>
@@ -54,21 +54,21 @@
   <style>
     /* ===== VARIABLES Y RESET ===== */
     :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --primary-light: #eef2ff;
-      --secondary: #7209b7;
-      --success: #06d6a0;
-      --warning: #ffd166;
-      --danger: #ef476f;
-      --dark: #1a1a2e;
-      --light: #f8f9fa;
-      --gray: #6c757d;
-      --gray-light: #e9ecef;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #111827;
+      --dark-gray: #1f2937;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+      --white: #ffffff;
       --border-radius: 12px;
-      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      --box-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.12);
-      --transition: all 0.3s ease;
+      --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      --box-shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.1);
+      --transition: all 0.25s ease;
       --sidebar-width: 260px;
     }
 
@@ -79,8 +79,8 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f9fafb;
       color: var(--dark);
       line-height: 1.6;
       min-height: 100vh;
@@ -96,21 +96,20 @@
     /* ===== SIDEBAR ===== */
     .sidebar {
       width: var(--sidebar-width);
-      background: linear-gradient(180deg, var(--dark) 0%, #16213e 100%);
-      color: white;
+      background: var(--dark);
+      color: var(--white);
       padding: 2rem 0;
       position: fixed;
       height: 100vh;
       overflow-y: auto;
       z-index: 100;
-      box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
-      transition: var(--transition);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+      transition: transform var(--transition);
     }
 
     .sidebar-header {
       padding: 0 1.5rem 2rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      margin-bottom: 1.5rem;
     }
 
     .logo {
@@ -123,7 +122,6 @@
 
     .logo i {
       color: var(--primary);
-      font-size: 1.8rem;
     }
 
     .nav-menu {
@@ -140,7 +138,7 @@
       align-items: center;
       gap: 12px;
       padding: 1rem 1.5rem;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.85);
       text-decoration: none;
       border-radius: var(--border-radius);
       transition: var(--transition);
@@ -149,20 +147,20 @@
 
     .nav-link:hover,
     .nav-link.active {
-      background: rgba(67, 97, 238, 0.15);
-      color: white;
-      transform: translateX(5px);
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--white);
+      transform: translateX(4px);
     }
 
     .nav-link i {
       width: 20px;
       text-align: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
     }
 
     .user-profile {
       margin-top: auto;
-      padding: 1.5rem;
+      padding: 1.5rem 1.5rem 1.5rem;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
@@ -181,11 +179,12 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      font-size: 0.9rem;
     }
 
     .user-details h4 {
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.15rem;
     }
 
     .user-details p {
@@ -198,7 +197,7 @@
       flex: 1;
       margin-left: var(--sidebar-width);
       padding: 2rem;
-      transition: var(--transition);
+      transition: margin-left var(--transition);
     }
 
     /* ===== HEADER ===== */
@@ -207,12 +206,13 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
       border-bottom: 1px solid var(--gray-light);
+      position: relative;
     }
 
     .page-title h1 {
-      font-size: 1.8rem;
+      font-size: 1.75rem;
       color: var(--dark);
       display: flex;
       align-items: center;
@@ -226,7 +226,7 @@
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
+      padding: 0.7rem 1.4rem;
       border: none;
       border-radius: var(--border-radius);
       font-weight: 600;
@@ -240,7 +240,7 @@
 
     .btn-primary {
       background: var(--primary);
-      color: white;
+      color: var(--white);
     }
 
     .btn-primary:hover {
@@ -251,42 +251,82 @@
 
     .btn-danger {
       background: var(--danger);
-      color: white;
+      color: var(--white);
     }
 
     .btn-danger:hover {
-      background: #e0355f;
+      background: #dc2626;
       transform: translateY(-2px);
     }
 
     .btn-success {
       background: var(--success);
-      color: white;
+      color: var(--white);
     }
 
     .btn-success:hover {
-      background: #05c08e;
+      background: #059669;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--gray-light);
+      color: var(--dark);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    /* ===== BOTÓN HAMBURGUESA ===== */
+    .mobile-menu-toggle {
+      display: none;
+      position: fixed;
+      top: 1.25rem;
+      left: 1.25rem;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      font-size: 1.25rem;
+      z-index: 101;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-menu-toggle:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
     }
 
     /* ===== TARJETAS ===== */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
 
     .card {
-      background: white;
+      background: var(--white);
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
       padding: 1.5rem;
       transition: var(--transition);
-      border: 1px solid var(--gray-light);
+      border: 1px solid #e5e7eb;
     }
 
     .card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
       box-shadow: var(--box-shadow-hover);
     }
 
@@ -294,13 +334,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--gray-light);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
     }
 
     .card-title {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 600;
       color: var(--dark);
       display: flex;
@@ -325,12 +365,12 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 1rem;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: var(--primary);
     }
 
     .stat-number {
-      font-size: 2.5rem;
+      font-size: 2.25rem;
       font-weight: 700;
       color: var(--dark);
       margin-bottom: 0.5rem;
@@ -345,18 +385,18 @@
     .table-responsive {
       overflow-x: auto;
       border-radius: var(--border-radius);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      background: var(--white);
     }
 
     thead {
-      background: linear-gradient(to right, var(--primary), var(--secondary));
-      color: white;
+      background: var(--primary);
+      color: var(--white);
     }
 
     th {
@@ -367,7 +407,7 @@
     }
 
     tbody tr {
-      border-bottom: 1px solid var(--gray-light);
+      border-bottom: 1px solid #f3f4f6;
       transition: var(--transition);
     }
 
@@ -391,21 +431,20 @@
     }
 
     .badge-success {
-      background-color: rgba(6, 214, 160, 0.1);
+      background-color: rgba(16, 185, 129, 0.1);
       color: var(--success);
     }
 
     .badge-warning {
-      background-color: rgba(255, 209, 102, 0.1);
-      color: #e6b400;
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
     }
 
     .badge-danger {
-      background-color: rgba(239, 71, 111, 0.1);
+      background-color: rgba(239, 68, 68, 0.1);
       color: var(--danger);
     }
 
-    /* ===== ENLACES ===== */
     .link-preview {
       display: inline-flex;
       align-items: center;
@@ -437,7 +476,7 @@
       background: var(--gray-light);
     }
 
-    /* ===== MODAL Y NOTIFICACIONES ===== */
+    /* ===== MODALES ===== */
     .modal {
       display: none;
       position: fixed;
@@ -449,24 +488,25 @@
       z-index: 1000;
       align-items: center;
       justify-content: center;
+      padding: 1rem;
     }
 
     .modal-content {
-      background: white;
+      background: var(--white);
       border-radius: var(--border-radius);
       padding: 2rem;
       max-width: 500px;
-      width: 90%;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-      animation: modalSlide 0.3s ease;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      animation: modalSlide 0.25s ease;
+      position: relative;
     }
 
     @keyframes modalSlide {
       from {
         opacity: 0;
-        transform: translateY(-50px);
+        transform: translateY(-30px);
       }
-
       to {
         opacity: 1;
         transform: translateY(0);
@@ -477,12 +517,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--gray-light);
     }
 
     .modal-header h3 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .close-modal {
@@ -491,17 +536,63 @@
       font-size: 1.5rem;
       color: var(--gray);
       cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
       transition: var(--transition);
     }
 
     .close-modal:hover {
       color: var(--danger);
+      background: var(--gray-light);
+    }
+
+    .modal-body {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--gray-light);
+    }
+
+    /* Modal específico para alertas */
+    .modal-alert .modal-content {
+      max-width: 400px;
+    }
+
+    .modal-alert .modal-icon {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-alert .modal-icon.success {
+      color: var(--success);
+    }
+
+    .modal-alert .modal-icon.warning {
+      color: var(--warning);
+    }
+
+    .modal-alert .modal-icon.error {
+      color: var(--danger);
+    }
+
+    .modal-alert .modal-icon.info {
+      color: var(--primary);
     }
 
     /* ===== FOOTER ===== */
     .footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
+      margin-top: 2.5rem;
+      padding-top: 1.25rem;
       border-top: 1px solid var(--gray-light);
       text-align: center;
       color: var(--gray);
@@ -511,11 +602,15 @@
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) {
       .dashboard-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       }
     }
 
     @media (max-width: 768px) {
+      .mobile-menu-toggle {
+        display: flex;
+      }
+
       .sidebar {
         transform: translateX(-100%);
         width: 280px;
@@ -527,13 +622,14 @@
 
       .main-content {
         margin-left: 0;
-        padding: 1rem;
+        padding: 1.25rem;
+        padding-top: 5rem; /* espacio para el botón hamburguesa */
       }
 
       .top-header {
         flex-direction: column;
-        gap: 1rem;
         align-items: flex-start;
+        gap: 1rem;
       }
 
       .header-actions {
@@ -541,41 +637,20 @@
         justify-content: space-between;
       }
 
-      .mobile-menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: var(--border-radius);
-        width: 44px;
-        height: 44px;
-        cursor: pointer;
-        font-size: 1.2rem;
-        transition: var(--transition);
-      }
-
-      .mobile-menu-toggle:hover {
-        background: var(--primary-dark);
-        transform: scale(1.05);
-      }
-
-      .main-content {
-        margin-left: 0;
-        padding: 1rem;
-      }
-
-      .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-
-
       .dashboard-grid {
         grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+
+      .modal-footer {
+        flex-direction: column;
+      }
+
+      .modal-footer .btn {
+        width: 100%;
       }
     }
 
@@ -585,14 +660,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 3rem;
+      padding: 2.5rem;
       color: var(--gray);
     }
 
     .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--gray-light);
+      width: 36px;
+      height: 36px;
+      border: 3px solid #e5e7eb;
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -607,12 +682,12 @@
 
     .empty-state {
       text-align: center;
-      padding: 3rem 1rem;
+      padding: 2.5rem 1rem;
       color: var(--gray);
     }
 
     .empty-state i {
-      font-size: 3rem;
+      font-size: 2.5rem;
       margin-bottom: 1rem;
       opacity: 0.5;
     }
@@ -623,7 +698,7 @@
     }
 
     .text-warning {
-      color: #e6b400;
+      color: var(--warning);
     }
 
     .text-danger {
@@ -646,16 +721,20 @@
       display: flex;
     }
 
-    .align-center {
-      align-items: center;
-    }
-
-    .justify-between {
-      justify-content: space-between;
-    }
-
     .gap-2 {
       gap: 0.5rem;
+    }
+
+    .gap-3 {
+      gap: 1rem;
+    }
+
+    .w-100 {
+      width: 100%;
+    }
+
+    .text-center {
+      text-align: center;
     }
   </style>
 </head>
@@ -725,11 +804,10 @@
           <h1><i class="fas fa-shield-alt"></i> Panel Administrativo</h1>
         </div>
         <div class="header-actions">
-          
           <button class="btn btn-primary" onclick="generarEnlace()">
             <i class="fas fa-plus-circle"></i> Nuevo Enlace
           </button>
-          <button class="btn btn-danger" onclick="logout()">
+          <button class="btn btn-danger" onclick="confirmarLogout()">
             <i class="fas fa-sign-out-alt"></i> Salir
           </button>
         </div>
@@ -855,6 +933,11 @@
         <p>&copy; 2025 FACDIN-API v1.0.0 | Todos los derechos reservados</p>
       </footer>
     </main>
+
+    <!-- Botón hamburguesa -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">
+      <i class="fas fa-bars"></i>
+    </button>
   </div>
 
   <!-- MODAL PARA NUEVO ENLACE -->
@@ -862,7 +945,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3><i class="fas fa-link"></i> Nuevo Enlace Generado</h3>
-        <button class="close-modal" onclick="closeModal()">&times;</button>
+        <button class="close-modal" onclick="closeModal('enlaceModal')">&times;</button>
       </div>
       <div class="modal-body">
         <p>El enlace de registro ha sido generado exitosamente.</p>
@@ -875,23 +958,149 @@
         </div>
         <p class="text-muted"><small><i class="fas fa-clock"></i> Este enlace expirará en 3 minutos.</small></p>
       </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('enlaceModal')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN (para logout) -->
+  <div id="confirmModal" class="modal modal-alert">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-sign-out-alt"></i> Confirmar Salida</h3>
+        <button class="close-modal" onclick="closeModal('confirmModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon warning">
+          <i class="fas fa-question-circle"></i>
+        </div>
+        <h4 class="text-center mb-2">¿Estás seguro de que quieres cerrar sesión?</h4>
+        <p class="text-center text-muted">Serás redirigido a la página de inicio de sesión.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('confirmModal')">Cancelar</button>
+        <button class="btn btn-danger" onclick="logout()">Sí, Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ERROR -->
+  <div id="errorModal" class="modal modal-alert">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+        <button class="close-modal" onclick="closeModal('errorModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon error">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h4 class="text-center mb-2" id="errorTitle">Ocurrió un error</h4>
+        <p class="text-center" id="errorMessage">No se pudo completar la operación</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary w-100" onclick="closeModal('errorModal')">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ÉXITO -->
+  <div id="successModal" class="modal modal-alert">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-check-circle"></i> ¡Éxito!</h3>
+        <button class="close-modal" onclick="closeModal('successModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon success">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h4 class="text-center mb-2" id="successTitle">Operación completada</h4>
+        <p class="text-center" id="successMessage">La operación se realizó correctamente</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary w-100" onclick="closeModal('successModal')">Aceptar</button>
+      </div>
     </div>
   </div>
 
   <script>
+    // Sistema de modales
+    function showModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevenir scroll
+      }
+    }
 
-    // Mostrar información del usuario
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restaurar scroll
+      }
+    }
+
+    function showError(title, message) {
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorMessage').textContent = message;
+      showModal('errorModal');
+    }
+
+    function showSuccess(title, message) {
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successMessage').textContent = message;
+      showModal('successModal');
+    }
+
+    function confirmarLogout() {
+      showModal('confirmModal');
+    }
+
+    // Cerrar modal al hacer clic fuera del contenido
+    window.addEventListener('click', (e) => {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach(modal => {
+        if (e.target === modal) {
+          closeModal(modal.id);
+        }
+      });
+    });
+
+    // Mostrar información del usuario y configurar menú
     document.addEventListener('DOMContentLoaded', () => {
       const nombre = empleado?.nombre || empleado?.email || 'Usuario';
-      const rol = empleado?.rol || 'N/A';
+      const rol = empleado?.rol || 'Administrador';
 
-      // Actualizar sidebar
       document.getElementById('sidebarNombre').textContent = nombre;
       document.getElementById('sidebarRol').textContent = rol.charAt(0).toUpperCase() + rol.slice(1);
 
-      // Iniciales para avatar
       const initials = nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
       document.getElementById('avatarInitials').textContent = initials;
+
+      // Configurar botón hamburguesa
+      const mobileToggle = document.getElementById('mobileMenuToggle');
+      const sidebar = document.querySelector('.sidebar');
+
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('active');
+        });
+      }
+
+      // Cerrar sidebar al hacer clic fuera (solo en móviles)
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+          const isClickInsideSidebar = sidebar.contains(e.target);
+          const isClickOnToggle = mobileToggle && mobileToggle.contains(e.target);
+          
+          if (!isClickInsideSidebar && !isClickOnToggle) {
+            sidebar.classList.remove('active');
+          }
+        }
+      });
 
       // Cargar datos iniciales
       cargarEstadisticas();
@@ -912,11 +1121,8 @@
           const clientes = await clientesRes.json();
           const enlaces = await enlacesRes.json();
 
-          // Actualizar contadores
           document.getElementById('totalClientes').textContent = clientes.length;
           document.getElementById('totalEnlaces').textContent = enlaces.length;
-
-          // Contar enlaces pendientes
           const pendientes = enlaces.filter(e => !e.usado).length;
           document.getElementById('enlacesPendientes').textContent = pendientes;
         }
@@ -967,19 +1173,17 @@
             </td>
             <td><code>${c.rif}</code></td>
             <td>${new Date(c.fechaCreacion).toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}</td>
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</td>
             <td>
               <span class="badge badge-success">Activo</span>
             </td>
           </tr>
         `).join('');
-
-        // Actualizar estadísticas
         document.getElementById('totalClientes').textContent = clientes.length;
 
       } catch (err) {
@@ -1039,11 +1243,11 @@
             </td>
             <td>${e.creadoPor || empleado.nombre || 'Sistema'}</td>
             <td>${new Date(e.fecha).toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}</td>
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</td>
             <td>
               <span class="badge ${e.usado ? 'badge-success' : 'badge-warning'}">
                 ${e.usado ? 'Asignado' : 'Pendiente'}
@@ -1057,12 +1261,9 @@
           </tr>
         `).join('');
 
-        // Actualizar estadísticas
         document.getElementById('totalEnlaces').textContent = enlaces.length;
         const pendientes = enlaces.filter(e => !e.usado).length;
         document.getElementById('enlacesPendientes').textContent = pendientes;
-
-        // Cargar enlaces pendientes
         verificarSinCliente();
 
       } catch (err) {
@@ -1084,61 +1285,43 @@
 
       try {
         tbody.innerHTML = `
-      <tr>
-        <td colspan="3" class="loading">
-          <div class="loading-spinner"></div>
-          <p>Verificando enlaces pendientes...</p>
-        </td>
-      </tr>
-    `;
+          <tr>
+            <td colspan="3" class="loading">
+              <div class="loading-spinner"></div>
+              <p>Verificando enlaces pendientes...</p>
+            </td>
+          </tr>
+        `;
 
-        // Primero intentar la ruta principal
         const res = await fetch('/api/admin/enlaces-generados', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!res.ok) {
-          throw new Error(`Error ${res.status}: ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
 
         const enlaces = await res.json();
 
-        // Depuración: mostrar en consola
-        console.log('🔍 Enlaces recibidos:', enlaces);
+        if (!Array.isArray(enlaces)) throw new Error('Formato de respuesta inválido.');
 
-        // Asegurarnos de que es un array
-        if (!Array.isArray(enlaces)) {
-          console.error('La respuesta no es un array:', typeof enlaces, enlaces);
-          throw new Error('Formato de respuesta inválido. Se esperaba un array.');
-        }
-
-        // Opción 1: Filtrar por campo "usado" (recomendado)
         const enlacesSinCliente = enlaces.filter(e => !e.usado);
-
-        // Opción 2: Filtrar por clienteId si existe
-        // const enlacesSinCliente = enlaces.filter(e => !e.usado && (!e.clienteId || e.clienteId === null));
-
-        console.log('✅ Enlaces sin cliente:', enlacesSinCliente);
 
         if (enlacesSinCliente.length === 0) {
           tbody.innerHTML = `
-        <tr>
-          <td colspan="3" class="empty-state">
-            <i class="fas fa-check-circle"></i>
-            <p>No hay enlaces pendientes</p>
-            <small>
-              Total en el sistema: ${enlaces.length}<br>
-              Enlaces usados: ${enlaces.filter(e => e.usado).length}
-            </small>
-          </td>
-        </tr>
-      `;
+            <tr>
+              <td colspan="3" class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>No hay enlaces pendientes</p>
+                <small>
+                  Total en el sistema: ${enlaces.length}<br>
+                  Enlaces usados: ${enlaces.filter(e => e.usado).length}
+                </small>
+              </td>
+            </tr>
+          `;
           return;
         }
 
-        // Mostrar los enlaces
         tbody.innerHTML = enlacesSinCliente.map(e => {
-          // Construir URL si no viene en la respuesta
           let enlaceUrl = e.enlace;
           if (!enlaceUrl) {
             const baseUrl = window.location.origin;
@@ -1147,70 +1330,67 @@
           }
 
           return `
-        <tr>
-          <td>
-            <div style="margin-bottom: 4px;">
-              <a href="${enlaceUrl}" target="_blank" class="link-preview">
-                <i class="fas fa-external-link-alt"></i>
-                ${enlaceUrl.substring(0, 50)}...
-              </a>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--gray);">
-              <strong>Token:</strong> ${e.token?.substring(0, 16)}...
-              ${e.shortId ? `<br><strong>Short ID:</strong> ${e.shortId}` : ''}
-              ${e.creadoPor ? `<br><strong>Creado por:</strong> ${e.creadoPor}` : ''}
-            </div>
-          </td>
-          <td>
-            ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) : 'Fecha no disponible'}
-          </td>
-          <td>
-            <div class="d-flex gap-2">
-              <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${enlaceUrl}')" title="Copiar enlace">
-                <i class="fas fa-copy"></i>
-              </button>
-              <button class="btn btn-warning btn-sm" onclick="console.log(${JSON.stringify(e)})" title="Ver datos completos">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
+            <tr>
+              <td>
+                <div style="margin-bottom: 4px;">
+                  <a href="${enlaceUrl}" target="_blank" class="link-preview">
+                    <i class="fas fa-external-link-alt"></i>
+                    ${enlaceUrl.substring(0, 50)}...
+                  </a>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--gray);">
+                  <strong>Token:</strong> ${e.token?.substring(0, 16)}...
+                  ${e.shortId ? `<br><strong>Short ID:</strong> ${e.shortId}` : ''}
+                  ${e.creadoPor ? `<br><strong>Creado por:</strong> ${e.creadoPor}` : ''}
+                </div>
+              </td>
+              <td>
+                ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : 'Fecha no disponible'}
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${enlaceUrl}')" title="Copiar enlace">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button class="btn btn-warning btn-sm" onclick="console.log(${JSON.stringify(e)})" title="Ver datos completos">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
         }).join('');
 
       } catch (err) {
         console.error('❌ Error en verificarSinCliente:', err);
-
-        // Mostrar error detallado
         tbody.innerHTML = `
-      <tr>
-        <td colspan="3" class="empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Error al verificar enlaces</p>
-          <small><strong>${err.message}</strong></small>
-          <div style="text-align: left; margin-top: 1rem; font-size: 0.8rem;">
-            <p><strong>Posibles soluciones:</strong></p>
-            <ol style="text-align: left; padding-left: 1.5rem;">
-              <li>Verifica que el backend esté corriendo</li>
-              <li>Verifica que la ruta /api/admin/enlaces-generados exista</li>
-              <li>Abre la consola (F12) para más detalles</li>
-            </ol>
-          </div>
-          <button class="btn btn-primary mt-2" onclick="verificarSinCliente()">
-            <i class="fas fa-redo"></i> Reintentar
-          </button>
-        </td>
-      </tr>
-    `;
+          <tr>
+            <td colspan="3" class="empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Error al verificar enlaces</p>
+              <small><strong>${err.message}</strong></small>
+              <div style="text-align: left; margin-top: 1rem; font-size: 0.8rem;">
+                <p><strong>Posibles soluciones:</strong></p>
+                <ol style="text-align: left; padding-left: 1.5rem;">
+                  <li>Verifica que el backend esté corriendo</li>
+                  <li>Verifica que la ruta /api/admin/enlaces-generados exista</li>
+                  <li>Abre la consola (F12) para más detalles</li>
+                </ol>
+              </div>
+              <button class="btn btn-primary mt-2" onclick="verificarSinCliente()">
+                <i class="fas fa-redo"></i> Reintentar
+              </button>
+            </td>
+          </tr>
+        `;
       }
     }
-
 
     async function generarEnlace() {
       const generateBtn = document.querySelector('.btn-primary[onclick="generarEnlace()"]');
@@ -1231,40 +1411,31 @@
         const data = await res.json();
 
         if (res.ok) {
-          // Mostrar modal con el enlace
-          const modal = document.getElementById('enlaceModal');
           const linkElement = document.getElementById('generatedLink');
-
           linkElement.textContent = data.link;
-          modal.style.display = 'flex';
+          showModal('enlaceModal');
 
-          // Actualizar lista de enlaces después de un segundo
           setTimeout(() => {
             cargarEnlaces();
             cargarEstadisticas();
           }, 1000);
         } else {
-          alert(`Error: ${data.error || 'No se pudo generar el enlace'}`);
+          showError('Error al generar enlace', data.error || 'No se pudo generar el enlace');
         }
 
       } catch (error) {
         console.error('Error generando enlace:', error);
-        alert('Error al generar el enlace. Verifica la conexión.');
+        showError('Error de conexión', 'No se pudo conectar con el servidor. Verifica tu conexión.');
       } finally {
         generateBtn.innerHTML = originalText;
         generateBtn.disabled = false;
       }
     }
 
-    function closeModal() {
-      document.getElementById('enlaceModal').style.display = 'none';
-    }
-
     function copyLink() {
       const linkText = document.getElementById('generatedLink').textContent;
       copyToClipboard(linkText);
 
-      // Mostrar confirmación
       const copyBtn = document.querySelector('.btn-primary[onclick="copyLink()"]');
       const originalText = copyBtn.innerHTML;
       copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
@@ -1276,7 +1447,6 @@
 
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
-        // Mostrar notificación (podrías implementar un sistema de notificaciones)
         showNotification('Enlace copiado al portapapeles', 'success');
       }).catch(err => {
         console.error('Error al copiar:', err);
@@ -1285,7 +1455,6 @@
     }
 
     function showNotification(message, type = 'info') {
-      // Crear elemento de notificación
       const notification = document.createElement('div');
       notification.style.cssText = `
         position: fixed;
@@ -1309,7 +1478,6 @@
 
       document.body.appendChild(notification);
 
-      // Remover después de 3 segundos
       setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
@@ -1318,62 +1486,33 @@
       }, 3000);
     }
 
-    // Añadir estilos para animaciones de notificación
-    const style = document.createElement('style');
-    style.textContent = `
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
       @keyframes slideIn {
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
       }
-      
       @keyframes slideOut {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
       }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(styleSheet);
 
     function logout() {
-      if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-        fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).finally(() => {
-          localStorage.removeItem('facdin_token');
-          window.location.href = '/login.html';
-        });
-      }
-    }
-
-    // Menu responsive
-    document.addEventListener('DOMContentLoaded', () => {
-      // Toggle sidebar en móvil
-      const mobileToggle = document.createElement('button');
-      mobileToggle.className = 'mobile-menu-toggle';
-      mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-      mobileToggle.onclick = () => document.querySelector('.sidebar').classList.toggle('active');
-
-      document.querySelector('.header-actions').prepend(mobileToggle);
-
-      // Cerrar sidebar al hacer clic fuera en móvil
-      document.addEventListener('click', (e) => {
-        const sidebar = document.querySelector('.sidebar');
-        const toggleBtn = document.querySelector('.mobile-menu-toggle');
-
-        if (window.innerWidth <= 768 &&
-          !sidebar.contains(e.target) &&
-          e.target !== toggleBtn &&
-          !toggleBtn.contains(e.target)) {
-          sidebar.classList.remove('active');
-        }
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).finally(() => {
+        localStorage.removeItem('facdin_token');
+        window.location.href = '/login.html';
       });
-    });
+    }
 
     // Actualizar datos cada 30 segundos
     setInterval(() => {
       cargarEstadisticas();
     }, 30000);
-
   </script>
 </body>
 

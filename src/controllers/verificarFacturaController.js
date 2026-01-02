@@ -204,7 +204,7 @@ exports.obtenerFacturasRecientes = async (req, res) => {
       numero: f.numero_factura,
       cliente: f.razon_social_receptor,
       total: f.total ? parseFloat(f.total).toFixed(2) : '0.00',
-      fecha: f.fecha_emision ? new Date(f.fecha_emision).toLocaleDateString() : 'N/A'
+      fecha: f.fecha_emision || 'N/A'
     }));
 
     res.json({

@@ -158,10 +158,31 @@ WEB_ROUTES.forEach(({ route, file }) => {
   } else {
     console.warn(`⚠️  Archivo no encontrado: ${file}`);
   }
-});
+}); 
 
 // ========================
-// ✅ RUTAS PÚBLICAS (antes de las rutas de API)
+// ✅ RUTAS WEB (HTML SIN EXTENSIÓN)
+// ========================
+WEB_ROUTES.forEach(({ route, file }) => {
+  const filePath = path.join(__dirname, 'public', file);
+  
+  if (fs.existsSync(filePath)) {
+    app.get(route, (req, res) => {
+      console.log(`📄 Sirviendo: ${file}`);
+      res.sendFile(filePath);
+    });
+  } else {
+    console.warn(`⚠️  Archivo no encontrado: ${file}`);
+  }
+});
+
+// ✅ REDIRECCIÓN DE RAÍZ A LOGIN
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+ 
+// ========================
+// ✅ RUTAS PÚBLICAS  
 // ========================
 const registerController = require('./src/controllers/registerController');
 app.get('/register/:token', registerController.mostrarFormulario);

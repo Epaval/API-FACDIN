@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1293,7 +1293,10 @@
         <p>El enlace de registro ha sido generado exitosamente.</p>
         <div class="link-container"
           style="background: var(--primary-light); padding: 1rem; border-radius: var(--border-radius); margin: 1rem 0;">
-          <code id="generatedLink" style="word-break: break-all; display: block; margin-bottom: 1rem;"></code>
+          <code id="generatedLink" style="word-break: break-all; display: block; margin-bottom: 1rem; cursor: pointer;"
+            title="Haz clic para copiar o mantén el cursor para ver el enlace completo">
+</code>
+
           <button class="btn btn-primary" onclick="copyLink()">
             <i class="fas fa-copy"></i> Copiar Enlace
           </button>
@@ -1480,7 +1483,8 @@
             <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.2rem;"></i>
             <div>
               <strong class="text-warning">⚠️ ADVERTENCIA:</strong>
-              <p class="mb-1" style="font-size: 0.9rem;">Esta acción eliminará permanentemente todos los enlaces con más de 24 horas de antigüedad.</p>
+              <p class="mb-1" style="font-size: 0.9rem;">Esta acción eliminará permanentemente todos los enlaces con más
+                de 24 horas de antigüedad.</p>
               <p class="mb-0" style="font-size: 0.85rem;">
                 <strong>Esto incluye:</strong><br>
                 • Enlaces de registro antiguos<br>
@@ -1501,7 +1505,8 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('limpiezaExpiradosModal')">Cancelar</button>
-        <button class="btn btn-warning" onclick="ejecutarLimpiezaExpirados()" id="btnConfirmarLimpiezaExpirados" disabled>
+        <button class="btn btn-warning" onclick="ejecutarLimpiezaExpirados()" id="btnConfirmarLimpiezaExpirados"
+          disabled>
           <i class="fas fa-trash-alt"></i> Eliminar Expirados
         </button>
       </div>
@@ -1623,7 +1628,7 @@
       cargarEstadisticas();
       cargarClientes();
       cargarEnlaces();
-      
+
       // Configurar checkbox para habilitar botones de eliminación
       configurarCheckboxes();
     });
@@ -2109,8 +2114,20 @@
         const data = await res.json();
 
         if (res.ok) {
+          // ✅ Guardar el enlace COMPLETO (para copiar)
+          window.fullGeneratedLink = data.link; // Lo guardamos globalmente o en un data-attribute
+
+          // ✅ Mostrar versión acortada en el modal
           const linkElement = document.getElementById('generatedLink');
-          linkElement.textContent = data.link;
+
+          // Extraer solo el token de la URL (parte después de /register/)
+          const url = new URL(data.link);
+          const tokenPart = url.pathname.split('/').pop(); // Obtiene el token
+          const shortDisplay = `http://localhost:3000/register/${tokenPart.substring(0, 10)}...`;
+
+          linkElement.textContent = shortDisplay;
+          linkElement.title = data.link; // Hover muestra el enlace completo
+
           showModal('enlaceModal');
 
           setTimeout(() => {
@@ -2131,16 +2148,24 @@
     }
 
     function copyLink() {
-      const linkText = document.getElementById('generatedLink').textContent;
-      copyToClipboard(linkText);
+      const fullLink = window.fullGeneratedLink;
+      if (!fullLink) {
+        showError('Error', 'No hay enlace para copiar');
+        return;
+      }
 
-      const copyBtn = document.querySelector('.btn-primary[onclick="copyLink()"]');
-      const originalText = copyBtn.innerHTML;
-      copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-
-      setTimeout(() => {
-        copyBtn.innerHTML = originalText;
-      }, 2000);
+      navigator.clipboard.writeText(fullLink).then(() => {
+        // Opcional: feedback visual
+        const btn = document.querySelector('#enlaceModal .btn-primary');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+        setTimeout(() => {
+          btn.innerHTML = original;
+        }, 2000);
+      }).catch(err => {
+        console.error('No se pudo copiar:', err);
+        showError('Error', 'No se pudo copiar al portapapeles');
+      });
     }
 
     function copyToClipboard(text) {
@@ -2247,16 +2272,16 @@
       // Configurar el checkbox para limpieza de no usados
       const checkboxNoUsados = document.getElementById('confirmarEliminacion');
       const checkboxExpirados = document.getElementById('confirmarEliminacionExpirados');
-      
+
       if (checkboxNoUsados) {
-        checkboxNoUsados.addEventListener('change', function() {
+        checkboxNoUsados.addEventListener('change', function () {
           const btn = document.getElementById('btnConfirmarLimpiezaNoUsados');
           btn.disabled = !this.checked;
         });
       }
-      
+
       if (checkboxExpirados) {
-        checkboxExpirados.addEventListener('change', function() {
+        checkboxExpirados.addEventListener('change', function () {
           const btn = document.getElementById('btnConfirmarLimpiezaExpirados');
           btn.disabled = !this.checked;
         });
@@ -2295,7 +2320,7 @@
           // Resetear checkbox
           const checkbox = document.getElementById('confirmarEliminacionExpirados');
           if (checkbox) checkbox.checked = false;
-          
+
           const btn = document.getElementById('btnConfirmarLimpiezaExpirados');
           if (btn) btn.disabled = true;
 
@@ -2352,7 +2377,7 @@
         // Resetear checkbox
         const checkbox = document.getElementById('confirmarEliminacion');
         if (checkbox) checkbox.checked = false;
-        
+
         const btn = document.getElementById('btnConfirmarLimpiezaNoUsados');
         if (btn) btn.disabled = true;
 

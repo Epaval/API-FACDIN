@@ -77,4 +77,4 @@ exports.logout = async (req, res) => {
   }
 
   res.json({ message: '✅ Sesión cerrada correctamente' });
-};
+}; 

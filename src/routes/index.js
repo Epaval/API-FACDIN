@@ -6,7 +6,7 @@ const router = express.Router();
 const clientRoutes = require('./clients');
 const invoiceRoutes = require('./invoices');
 const rifRoutes = require('./rif');
-const registerRoutes = require('./register');
+const registerRoutes = require('./registerTest');
 const verificarFacturaRoute = require('./verificarFactura'); 
 
 // Rutas públicas

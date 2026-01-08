@@ -1,4 +1,4 @@
-require("dotenv").config();
+ require("dotenv").config();
 
 // ========================
 // ✅ CONFIGURACIONES INICIALES
@@ -161,6 +161,14 @@ WEB_ROUTES.forEach(({ route, file }) => {
 });
 
 // ========================
+// ✅ RUTAS PÚBLICAS (antes de las rutas de API)
+// ========================
+const registerController = require('./src/controllers/registerController');
+app.get('/register/:token', registerController.mostrarFormulario);
+app.post('/register/:token', registerController.registrarCliente);
+app.get('/api/register/success', registerController.successPage);
+
+// ========================
 // ✅ RUTAS DE API
 // ========================
 
@@ -183,15 +191,16 @@ const API_ROUTES = [
   { path: '/api/facturas', route: require('./src/routes/facturasToken') },
   { path: '/api/notas', route: require('./src/routes/nota') },
   { path: '/api/admin', route: require('./src/routes/admin') },
+  { path: '/api/clientes', route: require('./src/routes/clients') },
   { path: '/api/caja', route: require('./src/routes/caja') },
   { path: '/api/auth', route: require('./src/routes/auth') },
-  { path: '/api/usuarios', route: require('./src/routes/usuario') },
-  { path: '/', route: require('./src/routes/redirect') }
+  { path: '/api/usuarios', route: require('./src/routes/usuario') },   
+  { path: '/', route: require('./src/routes/redirect') },    
 ];
 
 API_ROUTES.forEach(({ path, route }) => {
   app.use(path, route);
-});
+}); 
 
 // ========================
 // ✅ MANEJO DE ERRORES
@@ -331,5 +340,5 @@ module.exports = {
   server,
   io,
   estadoGlobalCajas,
-  startServer // Para testing
+  startServer 
 };

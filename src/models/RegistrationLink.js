@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     expiresAt: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: false,         
     },
     clientId: {
       type: DataTypes.INTEGER,

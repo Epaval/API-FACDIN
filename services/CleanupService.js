@@ -1,15 +1,10 @@
-// services/CleanupService.js
+ // services/CleanupService.js
 const cron = require('node-cron');
-const { Sequelize, Op } = require('sequelize');
+const { sequelize } = require('../src/config/database');
 
 class CleanupService {
   constructor() {
-    // Usar la conexión existente o crear una nueva
-    this.sequelize = new Sequelize(process.env.DATABASE_URL, {
-      logging: false,
-      dialect: 'postgres'
-    });
-    
+    this.sequelize = sequelize; // ✅ Usa la conexión global existente
     console.log('🔧 CleanupService inicializado');
   }
 
@@ -22,14 +17,14 @@ class CleanupService {
       
       console.log(`🧹 Buscando enlaces expirados (anteriores a ${fechaLimite.toISOString()})...`);
       
-      // PRIMERO: Buscar enlaces expirados
+      // ✅ Usa comillas dobles para columnas con mayúsculas
       const [enlacesExpirados] = await this.sequelize.query(
-        `SELECT id, token FROM registration_links 
-         WHERE fechaCreacion < :fechaLimite 
+        `SELECT id, token FROM "registration_links" 
+         WHERE "fechaCreacion" < :fechaLimite 
          AND used = false`,
         {
           replacements: { fechaLimite: fechaLimite.toISOString() },
-          type: Sequelize.QueryTypes.SELECT,
+          type: this.sequelize.QueryTypes.SELECT, // ✅ Acceso correcto
           transaction
         }
       );
@@ -41,16 +36,15 @@ class CleanupService {
         return { eliminados: 0, mensaje: 'No hay enlaces expirados' };
       }
       
-      // Preparar tokens para eliminar
       const tokens = enlacesExpirados.map(e => e.token);
       const ids = enlacesExpirados.map(e => e.id);
       
       // Eliminar de short_links
       const [shortLinksEliminados] = await this.sequelize.query(
-        `DELETE FROM short_links WHERE token IN (:tokens)`,
+        `DELETE FROM "short_links" WHERE token IN (:tokens)`,
         {
           replacements: { tokens },
-          type: Sequelize.QueryTypes.DELETE,
+          type: this.sequelize.QueryTypes.DELETE,
           transaction
         }
       );
@@ -59,10 +53,10 @@ class CleanupService {
       
       // Eliminar de registration_links
       const [registrationLinksEliminados] = await this.sequelize.query(
-        `DELETE FROM registration_links WHERE id IN (:ids) RETURNING id`,
+        `DELETE FROM "registration_links" WHERE id IN (:ids)`,
         {
           replacements: { ids },
-          type: Sequelize.QueryTypes.DELETE,
+          type: this.sequelize.QueryTypes.DELETE,
           transaction
         }
       );
@@ -70,9 +64,9 @@ class CleanupService {
       await transaction.commit();
       
       const resultado = {
-        eliminados: registrationLinksEliminados.length,
+        eliminados: registrationLinksEliminados,
         shortLinks: shortLinksEliminados,
-        registrationLinks: registrationLinksEliminados.length,
+        registrationLinks: registrationLinksEliminados,
         tokens: tokens
       };
       
@@ -90,23 +84,25 @@ class CleanupService {
     try {
       const fechaLimite = new Date(Date.now() - 24 * 60 * 60 * 1000);
       
-      const [enlacesExpirados] = await this.sequelize.query(
+      const [result] = await this.sequelize.query(
         `SELECT COUNT(*) as count, 
-                MIN(fechaCreacion) as mas_antiguo,
-                MAX(fechaCreacion) as mas_reciente
-         FROM registration_links 
-         WHERE fechaCreacion < :fechaLimite 
+                MIN("fechaCreacion") as mas_antiguo,
+                MAX("fechaCreacion") as mas_reciente
+         FROM "registration_links" 
+         WHERE "fechaCreacion" < :fechaLimite 
          AND used = false`,
         {
           replacements: { fechaLimite: fechaLimite.toISOString() },
-          type: Sequelize.QueryTypes.SELECT
+          type: this.sequelize.QueryTypes.SELECT
         }
       );
       
+      const row = result[0] || { count: 0, mas_antiguo: null, mas_reciente: null };
+      
       return {
-        expirados: parseInt(enlacesExpirados.count) || 0,
-        masAntiguo: enlacesExpirados.mas_antiguo,
-        masReciente: enlacesExpirados.mas_reciente,
+        expirados: parseInt(row.count) || 0,
+        masAntiguo: row.mas_antiguo,
+        masReciente: row.mas_reciente,
         fechaLimite: fechaLimite
       };
       
@@ -116,8 +112,7 @@ class CleanupService {
     }
   }
 
-  iniciarProgramacion() {
-    // Programar limpieza diaria a las 2:00 AM
+  iniciar() { // ✅ Nombre consistente con server.js
     cron.schedule('0 2 * * *', async () => {
       console.log(`\n⏰ [${new Date().toISOString()}] Ejecutando limpieza programada...`);
       try {
@@ -130,7 +125,6 @@ class CleanupService {
     
     console.log('✅ Limpieza programada: Diaria a las 2:00 AM');
     
-    // También verificar al inicio
     this.verificarEnlacesExpirados()
       .then(info => {
         console.log(`🔍 Estado actual: ${info.expirados} enlaces expirados pendientes`);

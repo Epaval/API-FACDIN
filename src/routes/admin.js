@@ -48,25 +48,32 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-/**
- * Middleware para verificar que es administrador
+ /*
+  Middleware para verificar que puede generar enlaces
  */
 const requireAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'No autenticado' });
   }
   
-  // Verificar rol de administrador
-  if (req.user.rol !== 'admin' && !req.user.email.endsWith('admin@facdin.com')) {
+  // Verificar que el email termine con los sufijos autorizados
+  const email = req.user.email;
+  const puedeGenerarEnlaces = 
+    email.endsWith('admin@facdin.com') || 
+    email.endsWith('agente@facdin.com');
+  
+  if (!puedeGenerarEnlaces) {
     return res.status(403).json({ 
       error: 'Acceso denegado', 
-      message: 'Solo los administradores pueden acceder a esta función',
-      userRol: req.user.rol
+      message: 'Solo los administradores y agentes autorizados pueden generar enlaces',
+      userEmail: email,
+      permiso: 'solo-lectura'
     });
   }
   
   next();
 };
+
 
 // ========================
 // RUTAS PROTEGIDAS
@@ -78,14 +85,15 @@ router.use(requireAuth);
 /**
  * Generar nuevo enlace de registro
  */
+ // src/routes/admin.js
 router.post('/generar-enlace', requireAdmin, async (req, res) => {
   try {
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutos
-    
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
+     
     const enlace = await RegistrationLink.create({
       token,
-      expiresAt,
+      expiresAt,  
       used: false,
       createdBy: req.user.email
     });
@@ -96,16 +104,11 @@ router.post('/generar-enlace', requireAdmin, async (req, res) => {
       success: true,
       link,
       token,
-      expiresAt: expiresAt.toISOString(),
       createdBy: req.user.email
     });
-    
   } catch (error) {
     console.error('Error generando enlace:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Error interno del servidor' 
-    });
+    res.status(500).json({ success: false, error: 'Error interno' });
   }
 });
 

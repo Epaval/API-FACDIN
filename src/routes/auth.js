@@ -1,17 +1,30 @@
-const express = require('express');
+ const express = require('express');
 const router = express.Router();
+
+// Cargar modelo Client
 const { Client } = require('../models');
 
-// Controladores existentes
-const { login, logout } = require('../controllers/authController');
+// Cargar controladores con manejo de errores
+let login, logout;
+try {
+  const authController = require('../controllers/authController');
+  login = authController.login;
+  logout = authController.logout;
+  
+  if (typeof login !== 'function' || typeof logout !== 'function') {
+    throw new Error('authController no exporta funciones válidas');
+  }
+} catch (error) {
+  console.error('❌ FATAL: No se pudo cargar authController:', error.message);
+  console.error('💡 Asegúrate de que bcrypt, jsonwebtoken y otros estén en "dependencies" (no "devDependencies")');
+  process.exit(1);
+}
 
-// POST /api/auth/login
+// Rutas de autenticación
 router.post('/login', login);
-
-// POST /api/auth/logout
 router.post('/logout', logout);
 
-// GET /api/auth/validar-api-key ← NUEVO
+// Validación de API Key
 router.get('/validar-api-key', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
 
